@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products | Deals99</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="global.css">
+    <style>
+    body {
+      background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+      font-family: 'Inter', Arial, sans-serif;
+      color: #23272f;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      background: rgba(255,255,255,0.97);
+      border-radius: 24px;
+      box-shadow: 0 25px 80px rgba(156,39,176,0.10), 0 0 0 1px rgba(255,255,255,0.1);
+      padding: 3rem 2.5rem;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    h2 {
+      font-weight: 700;
+      color: #9c27b0;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      font-size: 2.2rem;
+      position: relative;
+    }
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, #9c27b0, #ba68c8);
+      border-radius: 2px;
+    }
+    .products-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+      border-radius: 16px;
+      border: 1px solid #ce93d8;
+    }
+    .products-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #7b1fa2;
+      margin-bottom: 0.5rem;
+    }
+    .products-desc {
+      color: #666;
+      font-size: 1.1rem;
+    }
+    .filters-section {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    .filter-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .filter-label {
+      font-weight: 600;
+      color: #7b1fa2;
+      font-size: 0.9rem;
+    }
+    .filter-select {
+      padding: 0.5rem;
+      border: 2px solid #e1bee7;
+      border-radius: 6px;
+      background: #fff;
+      color: #7b1fa2;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .filter-select:focus {
+      outline: none;
+      border-color: #9c27b0;
+    }
+    .search-box {
+      padding: 0.5rem 1rem;
+      border: 2px solid #e1bee7;
+      border-radius: 6px;
+      background: #fff;
+      color: #7b1fa2;
+      font-size: 0.9rem;
+      min-width: 200px;
+    }
+    .search-box:focus {
+      outline: none;
+      border-color: #9c27b0;
+    }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+    .product-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(156,39,176,0.08);
+      padding: 2rem 1.5rem 1.5rem 1.5rem;
+      text-align: center;
+      border: 1px solid #f3e5f5;
+      transition: box-shadow 0.2s, transform 0.2s;
+      position: relative;
+    }
+    .product-card:hover {
+      box-shadow: 0 8px 32px rgba(156,39,176,0.15);
+      transform: translateY(-4px);
+    }
+    .product-badge {
+      position: absolute;
+      top: -10px;
+      right: 20px;
+      background: linear-gradient(135deg, #9c27b0, #ba68c8);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .product-img {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      background: #f7f7fa;
+      box-shadow: 0 2px 12px #0001;
+    }
+    .product-name {
+      font-weight: 600;
+      color: #7b1fa2;
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+    }
+    .product-desc {
+      color: #666;
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      min-height: 40px;
+    }
+    .product-price {
+      color: #4caf50;
+      font-weight: 700;
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+    }
+    .product-original {
+      color: #999;
+      text-decoration: line-through;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .product-category {
+      background: #f3e5f5;
+      color: #7b1fa2;
+      padding: 0.3rem 0.8rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+    .product-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .btn-product {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+    .btn-cart {
+      background: #4caf50;
+      color: #fff;
+    }
+    .btn-cart:hover {
+      background: #388e3c;
+    }
+    .btn-wishlist {
+      background: #e91e63;
+      color: #fff;
+    }
+    .btn-wishlist:hover {
+      background: #ad1457;
+    }
+    .btn-view {
+      background: #9c27b0;
+      color: #fff;
+    }
+    .btn-view:hover {
+      background: #7b1fa2;
+    }
+    .no-products {
+      text-align: center;
+      color: #666;
+      font-size: 1.1rem;
+      padding: 2rem;
+    }
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px auto;
+        padding: 1.5rem 0.5rem;
+        max-width: 98vw;
+      }
+      .products-grid {
+        grid-template-columns: 1fr;
+      }
+      .filters-section {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .filter-group {
+        justify-content: center;
+      }
+        }
+    </style>
+</head>
+<body>
+  <div class="container">
+    <h2><i class="fas fa-shopping-bag"></i> All Products</h2>
+    
+    <div class="products-header">
+      <div class="products-title">🛍️ Browse Our Collection</div>
+      <div class="products-desc">Find the perfect products for you</div>
+    </div>
+    
+    <div class="filters-section">
+      <div class="filter-group">
+        <label class="filter-label">Category:</label>
+        <select class="filter-select" id="categoryFilter">
+          <option value="">All Categories</option>
+          <option value="electronics">Electronics</option>
+          <option value="fashion">Fashion</option>
+          <option value="gifts">Gifts</option>
+          <option value="accessories">Accessories</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Sort by:</label>
+        <select class="filter-select" id="sortFilter">
+          <option value="name">Name</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="newest">Newest</option>
+        </select>
+        </div>
+      <div class="filter-group">
+        <input type="text" class="search-box" id="searchBox" placeholder="Search products...">
+        </div>
+    </div>
+
+    <div class="products-grid" id="productsGrid">
+      <!-- Products will be rendered here -->
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
+    <script>
+    // Demo products data
+    const productsData = [
+      { 
+        name: "Wireless Earbuds", 
+        desc: "True wireless earbuds with noise cancellation", 
+        price: 2499, 
+        original: 3999,
+        category: "electronics",
+        img: "https://cdn-icons-png.flaticon.com/512/1048/1048927.png",
+        badge: "Hot",
+        stock: 12
+      },
+      { 
+        name: "Designer T-Shirt", 
+        desc: "Premium cotton t-shirt with unique design", 
+        price: 799, 
+        original: 1299,
+        category: "fashion",
+        img: "https://cdn-icons-png.flaticon.com/512/3135/3135706.png",
+        badge: "Trending",
+        stock: 0
+      },
+      { 
+        name: "Personalized Mug", 
+        desc: "Custom photo mug for your loved ones", 
+        price: 299, 
+        original: 499,
+        category: "gifts",
+        img: "https://cdn-icons-png.flaticon.com/512/3050/3050173.png",
+        badge: "Popular",
+        stock: 5
+      },
+      { 
+        name: "Phone Stand", 
+        desc: "Adjustable phone holder for desk", 
+        price: 199, 
+        original: 299,
+        category: "accessories",
+        img: "https://cdn-icons-png.flaticon.com/512/2921/2921822.png",
+        badge: "Best Seller",
+        stock: 20
+      },
+      { 
+        name: "Smart Fitness Band", 
+        desc: "Track your health and fitness goals", 
+        price: 899, 
+        original: 1499,
+        category: "electronics",
+        img: "https://cdn-icons-png.flaticon.com/512/3134/3134810.png",
+        badge: "New",
+        stock: 0
+      },
+      { 
+        name: "Bluetooth Speaker", 
+        desc: "Portable speaker with deep bass", 
+        price: 1499, 
+        original: 2499,
+        category: "electronics",
+        img: "https://cdn-icons-png.flaticon.com/512/727/727240.png",
+        badge: "Limited",
+        stock: 7
+      },
+      { 
+        name: "Custom Keychain", 
+        desc: "Personalized photo keychains", 
+        price: 99, 
+        original: 199,
+        category: "gifts",
+        img: "https://cdn-icons-png.flaticon.com/512/3700/3700833.png",
+        badge: "Gift",
+        stock: 30
+      },
+      { 
+        name: "Stylish Cap", 
+        desc: "Comfortable and trendy cap", 
+        price: 299, 
+        original: 499,
+        category: "fashion",
+        img: "https://cdn-icons-png.flaticon.com/512/3135/3135706.png",
+        badge: "Fashion",
+        stock: 2
+      }
+    ];
+
+    let filteredProducts = [...productsData];
+
+    function renderProducts() {
+      const grid = document.getElementById("productsGrid");
+      if (filteredProducts.length === 0) {
+        grid.innerHTML = '<div class="no-products">No products found matching your criteria.</div>';
+        return;
+      }
+      
+      grid.innerHTML = filteredProducts.map(product => `
+        <div class="product-card">
+          <div class="product-badge">${product.badge}</div>
+          <img src="${product.img}" alt="${product.name}" class="product-img">
+          <div class="product-name">${product.name}</div>
+          <div class="product-desc">${product.desc}</div>
+          <div class="product-price">₹${product.price.toLocaleString()}</div>
+          <div class="product-original">₹${product.original.toLocaleString()}</div>
+          <div class="product-category">${product.category}</div>
+          <div class="product-stock">
+            ${typeof product.stock === 'number' ? (product.stock > 0 
+              ? `<span class='badge bg-success'>In Stock (${product.stock})</span>` 
+              : `<span class='badge bg-danger'>Out of Stock</span>`) 
+            : ''}
+          </div>
+          <div class="product-actions">
+            <button class="btn-product btn-cart add-to-cart" 
+                    data-name="${product.name}" 
+                    data-price="${product.price}" 
+                    data-img="${product.img}" 
+                    data-desc="${product.desc}" 
+                    data-category="${product.category}">
+              <i class="fas fa-cart-plus"></i> Cart
+            </button>
+            <button class="btn-product btn-wishlist add-to-wishlist" 
+                    data-name="${product.name}" 
+                    data-price="${product.price}" 
+                    data-img="${product.img}" 
+                    data-desc="${product.desc}" 
+                    data-category="${product.category}">
+              <i class="fas fa-heart"></i>
+            </button>
+            <button class="btn-product btn-view quick-view" 
+                    data-name="${product.name}" 
+                    data-price="${product.price}" 
+                    data-img="${product.img}" 
+                    data-desc="${product.desc}" 
+                    data-category="${product.category}">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function filterProducts() {
+      const categoryFilter = document.getElementById("categoryFilter").value;
+      const searchQuery = document.getElementById("searchBox").value.toLowerCase();
+      const sortBy = document.getElementById("sortFilter").value;
+
+      filteredProducts = productsData.filter(product => {
+        const matchesCategory = !categoryFilter || product.category === categoryFilter;
+        const matchesSearch = !searchQuery || 
+          product.name.toLowerCase().includes(searchQuery) ||
+          product.desc.toLowerCase().includes(searchQuery);
+        return matchesCategory && matchesSearch;
+      });
+
+      // Sort products
+      switch (sortBy) {
+        case "price-low":
+          filteredProducts.sort((a, b) => a.price - b.price);
+          break;
+        case "price-high":
+          filteredProducts.sort((a, b) => b.price - a.price);
+          break;
+        case "name":
+          filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case "newest":
+          // For demo, we'll sort by badge (New first)
+          filteredProducts.sort((a, b) => {
+            if (a.badge === "New") return -1;
+            if (b.badge === "New") return 1;
+            return 0;
+          });
+          break;
+      }
+
+      renderProducts();
+    }
+
+    // Event listeners
+    document.getElementById("categoryFilter").addEventListener("change", filterProducts);
+    document.getElementById("sortFilter").addEventListener("change", filterProducts);
+    document.getElementById("searchBox").addEventListener("input", filterProducts);
+
+    document.addEventListener('DOMContentLoaded', function() {
+      renderProducts();
+    });
+    </script>
+</body>
+</html>

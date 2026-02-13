@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Settings | Deals99</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="global.css">
+  <style>
+    /* Enhanced Account Page Styles */
+    body {
+      background: linear-gradient(135deg, #f8f9ff 0%, #ffe6ec 50%, #fff5f7 100%);
+      font-family: 'Inter', Arial, sans-serif;
+      color: #23272f;
+      font-size: 1.1rem;
+      line-height: 1.8;
+      min-height: 100vh;
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      box-shadow: 0 25px 80px rgba(233,30,99,0.15), 0 0 0 1px rgba(255,255,255,0.1);
+      padding: 3rem 2.5rem;
+      animation: slideInUp 0.6s ease;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #e91e63, #ff6b9d, #e91e63);
+      border-radius: 24px;
+      z-index: -1;
+      opacity: 0.3;
+      animation: borderGlow 3s ease-in-out infinite;
+    }
+    
+    @keyframes borderGlow {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+    
+    h2 {
+      font-weight: 700;
+      color: #e91e63;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      font-size: 2.2rem;
+      position: relative;
+    }
+    
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, #e91e63, #ff6b9d);
+      border-radius: 2px;
+    }
+    
+    .account-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 3rem;
+      margin-top: 2rem;
+    }
+    
+    .account-sidebar {
+      background: rgba(255,255,255,0.9);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      height: fit-content;
+    }
+    
+    .account-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .nav-item {
+      padding: 1rem 1.5rem;
+      border: none;
+      background: none;
+      color: #495057;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-radius: 12px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .nav-item:hover {
+      background: rgba(233,30,99,0.1);
+      color: #e91e63;
+      transform: translateX(5px);
+    }
+    
+    .nav-item.active {
+      background: linear-gradient(135deg, #e91e63 0%, #ff6b9d 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(233,30,99,0.3);
+    }
+    
+    .account-content {
+      background: rgba(255,255,255,0.9);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1d3557;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #495057;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 1rem;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.9);
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: #e91e63;
+      box-shadow: 0 0 0 4px rgba(233,30,99,0.1);
+      outline: none;
+      transform: translateY(-1px);
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    
+    .btn-save {
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-save:hover {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+    }
+    
+    .btn-secondary {
+      padding: 1rem 2rem;
+      background: rgba(255,255,255,0.9);
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      color: #495057;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-secondary:hover {
+      border-color: #e91e63;
+      color: #e91e63;
+      transform: translateY(-2px);
+    }
+    
+    .payment-methods {
+      display: grid;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .payment-method {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.5rem;
+      background: rgba(248,249,250,0.8);
+      border-radius: 12px;
+      border: 2px solid #e9ecef;
+      transition: all 0.3s ease;
+    }
+    
+    .payment-method:hover {
+      border-color: #e91e63;
+      transform: translateY(-2px);
+    }
+    
+    .payment-method.default {
+      border-color: #e91e63;
+      background: rgba(233,30,99,0.1);
+    }
+    
+    .payment-icon {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border-radius: 8px;
+      font-size: 1.5rem;
+      color: #e91e63;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .payment-details {
+      flex: 1;
+    }
+    
+    .payment-name {
+      font-weight: 600;
+      color: #1d3557;
+      margin-bottom: 0.25rem;
+    }
+    
+    .payment-info {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+    
+    .payment-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .btn-action {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-edit {
+      background: #3498db;
+      color: white;
+    }
+    
+    .btn-edit:hover {
+      background: #2980b9;
+    }
+    
+    .btn-delete {
+      background: #e74c3c;
+      color: white;
+    }
+    
+    .btn-delete:hover {
+      background: #c0392b;
+    }
+    
+    .btn-default {
+      background: #27ae60;
+      color: white;
+    }
+    
+    .btn-default:hover {
+      background: #2ecc71;
+    }
+    
+    .billing-history {
+      display: grid;
+      gap: 1rem;
+    }
+    
+    .billing-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      background: rgba(248,249,250,0.8);
+      border-radius: 12px;
+      border: 1px solid #e9ecef;
+      transition: all 0.3s ease;
+    }
+    
+    .billing-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .billing-info {
+      flex: 1;
+    }
+    
+    .billing-date {
+      font-weight: 600;
+      color: #1d3557;
+      margin-bottom: 0.25rem;
+    }
+    
+    .billing-amount {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #e91e63;
+    }
+    
+    .billing-status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .status-paid {
+      background: rgba(39, 174, 96, 0.2);
+      color: #166534;
+    }
+    
+    .status-pending {
+      background: rgba(255, 193, 7, 0.2);
+      color: #856404;
+    }
+    
+    .status-failed {
+      background: rgba(231, 76, 60, 0.2);
+      color: #991b1b;
+    }
+    
+    .account-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: rgba(255,255,255,0.9);
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .stat-icon {
+      font-size: 2rem;
+      color: #e91e63;
+      margin-bottom: 1rem;
+    }
+    
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1d3557;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .floating-shapes {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .shape {
+      position: absolute;
+      opacity: 0.1;
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .shape:nth-child(1) {
+      top: 20%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+    
+    .shape:nth-child(2) {
+      top: 60%;
+      right: 10%;
+      animation-delay: 2s;
+    }
+    
+    .shape:nth-child(3) {
+      bottom: 20%;
+      left: 20%;
+      animation-delay: 4s;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+    }
+    
+    .back-to-home {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e91e63;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    
+    .back-to-home:hover {
+      background: #e91e63;
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px auto;
+        padding: 2rem 1.5rem;
+        max-width: 95%;
+      }
+      
+      .account-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .back-to-home {
+        top: 10px;
+        left: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Background Shapes -->
+  <div class="floating-shapes">
+    <div class="shape" style="width: 60px; height: 60px; background: #e91e63; border-radius: 50%;"></div>
+    <div class="shape" style="width: 40px; height: 40px; background: #ff6b9d; border-radius: 8px;"></div>
+    <div class="shape" style="width: 80px; height: 40px; background: #ffd166; border-radius: 20px;"></div>
+  </div>
+
+  <!-- Back to Home Button -->
+  <button class="back-to-home" onclick="window.location.href='index.html'" title="Back to Home">
+    <i class="fas fa-home"></i>
+  </button>
+
+  <div class="container">
+    <h2><i class="fas fa-cog"></i> Account Settings</h2>
+    
+    <div class="account-grid">
+      <!-- Account Sidebar -->
+      <div class="account-sidebar">
+        <div class="account-nav">
+          <button class="nav-item active" onclick="showSection('overview')">
+            <i class="fas fa-tachometer-alt"></i> Overview
+          </button>
+          <button class="nav-item" onclick="showSection('billing')">
+            <i class="fas fa-credit-card"></i> Billing & Payment
+          </button>
+          <button class="nav-item" onclick="showSection('addresses')">
+            <i class="fas fa-map-marker-alt"></i> Addresses
+          </button>
+          <button class="nav-item" onclick="showSection('security')">
+            <i class="fas fa-shield-alt"></i> Security
+          </button>
+          <button class="nav-item" onclick="showSection('notifications')">
+            <i class="fas fa-bell"></i> Notifications
+          </button>
+          <button class="nav-item" onclick="showSection('privacy')">
+            <i class="fas fa-user-shield"></i> Privacy
+    </button>
+        </div>
+      </div>
+      
+      <!-- Account Content -->
+      <div class="account-content">
+        <!-- Overview Section -->
+        <div id="overviewSection" class="content-section active">
+          <div class="section-title">
+            <i class="fas fa-tachometer-alt"></i> Account Overview
+          </div>
+          
+          <div class="account-stats">
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-shopping-bag"></i>
+              </div>
+              <div class="stat-number" id="totalOrders">12</div>
+              <div class="stat-label">Total Orders</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-rupee-sign"></i>
+              </div>
+              <div class="stat-number" id="totalSpent">₹15,420</div>
+              <div class="stat-label">Total Spent</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-heart"></i>
+              </div>
+              <div class="stat-number" id="wishlistItems">8</div>
+              <div class="stat-label">Wishlist Items</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">
+                <i class="fas fa-star"></i>
+              </div>
+              <div class="stat-number" id="reviews">5</div>
+              <div class="stat-label">Reviews</div>
+            </div>
+          </div>
+          
+          <div class="section-title">
+            <i class="fas fa-clock"></i> Recent Activity
+          </div>
+          
+          <div class="billing-history">
+            <div class="billing-item">
+              <div class="billing-info">
+                <div class="billing-date">Order #ORD123456</div>
+                <div class="billing-amount">₹1,299</div>
+              </div>
+              <div class="billing-status status-paid">Paid</div>
+            </div>
+            <div class="billing-item">
+              <div class="billing-info">
+                <div class="billing-date">Order #ORD123455</div>
+                <div class="billing-amount">₹899</div>
+              </div>
+              <div class="billing-status status-delivered">Delivered</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Billing & Payment Section -->
+        <div id="billingSection" class="content-section">
+          <div class="section-title">
+            <i class="fas fa-credit-card"></i> Billing & Payment Methods
+          </div>
+          
+          <div class="payment-methods">
+            <div class="payment-method default">
+              <div class="payment-icon">
+                <i class="fab fa-cc-visa"></i>
+              </div>
+              <div class="payment-details">
+                <div class="payment-name">Visa ending in 1234</div>
+                <div class="payment-info">Expires 12/25</div>
+              </div>
+              <div class="payment-actions">
+                <button class="btn-action btn-edit" onclick="editPaymentMethod('visa')">Edit</button>
+                <button class="btn-action btn-default" disabled>Default</button>
+              </div>
+            </div>
+            
+            <div class="payment-method">
+              <div class="payment-icon">
+                <i class="fas fa-university"></i>
+              </div>
+              <div class="payment-details">
+                <div class="payment-name">UPI - john@okicici</div>
+                <div class="payment-info">ICICI Bank</div>
+              </div>
+              <div class="payment-actions">
+                <button class="btn-action btn-edit" onclick="editPaymentMethod('upi')">Edit</button>
+                <button class="btn-action btn-default" onclick="setDefaultPayment('upi')">Set Default</button>
+                <button class="btn-action btn-delete" onclick="deletePaymentMethod('upi')">Delete</button>
+              </div>
+            </div>
+            
+            <div class="payment-method">
+              <div class="payment-icon">
+                <i class="fas fa-money-bill-wave"></i>
+              </div>
+              <div class="payment-details">
+                <div class="payment-name">Cash on Delivery</div>
+                <div class="payment-info">Pay when you receive</div>
+              </div>
+              <div class="payment-actions">
+                <button class="btn-action btn-edit" onclick="editPaymentMethod('cod')">Edit</button>
+                <button class="btn-action btn-default" onclick="setDefaultPayment('cod')">Set Default</button>
+                <button class="btn-action btn-delete" onclick="deletePaymentMethod('cod')">Delete</button>
+              </div>
+            </div>
+          </div>
+          
+          <button class="btn-save" onclick="addPaymentMethod()">
+            <i class="fas fa-plus"></i> Add Payment Method
+          </button>
+          
+          <div class="section-title" style="margin-top: 3rem;">
+            <i class="fas fa-file-invoice"></i> Billing History
+          </div>
+          
+          <div class="billing-history">
+            <div class="billing-item">
+              <div class="billing-info">
+                <div class="billing-date">Order #ORD123456 - Wireless Headphones</div>
+                <div class="billing-amount">₹1,299</div>
+              </div>
+              <div class="billing-status status-paid">Paid</div>
+            </div>
+            <div class="billing-item">
+              <div class="billing-info">
+                <div class="billing-date">Order #ORD123455 - Smart Watch</div>
+                <div class="billing-amount">₹2,499</div>
+              </div>
+              <div class="billing-status status-paid">Paid</div>
+            </div>
+            <div class="billing-item">
+              <div class="billing-info">
+                <div class="billing-date">Order #ORD123454 - Custom T-Shirt</div>
+                <div class="billing-amount">₹599</div>
+              </div>
+              <div class="billing-status status-paid">Paid</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Addresses Section -->
+        <div id="addressesSection" class="content-section">
+          <div class="section-title">
+            <i class="fas fa-map-marker-alt"></i> Addresses
+          </div>
+          
+          <form id="addressForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="addressType">Address Type</label>
+                <select id="addressType" name="addressType" required>
+                  <option value="">Select Address Type</option>
+                  <option value="home">Home</option>
+                  <option value="work">Work</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="addressName">Address Name</label>
+                <input type="text" id="addressName" name="addressName" placeholder="e.g., Home Address" required>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="fullName">Full Name</label>
+              <input type="text" id="fullName" name="fullName" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="addressLine1">Address Line 1</label>
+              <input type="text" id="addressLine1" name="addressLine1" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="addressLine2">Address Line 2 (Optional)</label>
+              <input type="text" id="addressLine2" name="addressLine2">
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="city">City</label>
+                <input type="text" id="city" name="city" required>
+              </div>
+              <div class="form-group">
+                <label for="state">State</label>
+                <input type="text" id="state" name="state" required>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="zipCode">ZIP Code</label>
+                <input type="text" id="zipCode" name="zipCode" required>
+              </div>
+              <div class="form-group">
+                <label for="country">Country</label>
+                <select id="country" name="country" required>
+                  <option value="">Select Country</option>
+                  <option value="India">India</option>
+                  <option value="USA">USA</option>
+                  <option value="UK">UK</option>
+                  <option value="Canada">Canada</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input type="tel" id="phone" name="phone" required>
+            </div>
+            
+            <div class="form-group">
+              <label>
+                <input type="checkbox" id="defaultAddress" name="defaultAddress">
+                Set as default address
+              </label>
+    </div>
+            
+            <button type="submit" class="btn-save">
+              <i class="fas fa-save"></i> Save Address
+            </button>
+      </form>
+    </div>
+
+        <!-- Security Section -->
+        <div id="securitySection" class="content-section">
+          <div class="section-title">
+            <i class="fas fa-shield-alt"></i> Security Settings
+          </div>
+          
+          <form id="securityForm">
+            <div class="form-group">
+              <label for="currentPassword">Current Password</label>
+              <input type="password" id="currentPassword" name="currentPassword" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <input type="password" id="newPassword" name="newPassword" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="confirmPassword">Confirm New Password</label>
+              <input type="password" id="confirmPassword" name="confirmPassword" required>
+    </div>
+
+            <button type="submit" class="btn-save">
+              <i class="fas fa-key"></i> Update Password
+            </button>
+      </form>
+          
+          <div class="section-title" style="margin-top: 3rem;">
+            <i class="fas fa-lock"></i> Two-Factor Authentication
+          </div>
+          
+          <div class="payment-methods">
+            <div class="payment-method">
+              <div class="payment-icon">
+                <i class="fas fa-mobile-alt"></i>
+              </div>
+              <div class="payment-details">
+                <div class="payment-name">SMS Authentication</div>
+                <div class="payment-info">Receive codes via SMS</div>
+              </div>
+              <div class="payment-actions">
+                <button class="btn-action btn-edit" onclick="enable2FA('sms')">Enable</button>
+              </div>
+            </div>
+            
+            <div class="payment-method">
+              <div class="payment-icon">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div class="payment-details">
+                <div class="payment-name">Email Authentication</div>
+                <div class="payment-info">Receive codes via email</div>
+              </div>
+              <div class="payment-actions">
+                <button class="btn-action btn-edit" onclick="enable2FA('email')">Enable</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Notifications Section -->
+        <div id="notificationsSection" class="content-section">
+          <div class="section-title">
+            <i class="fas fa-bell"></i> Notification Preferences
+          </div>
+          
+          <div class="payment-methods">
+            <div class="payment-method">
+              <div class="payment-icon">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div class="payment-details">
+                <div class="payment-name">Email Notifications</div>
+                <div class="payment-info">Order updates, deals, and offers</div>
+              </div>
+              <div class="payment-actions">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="emailNotifications" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="payment-method">
+              <div class="payment-icon">
+                <i class="fas fa-sms"></i>
+              </div>
+              <div class="payment-details">
+                <div class="payment-name">SMS Notifications</div>
+                <div class="payment-info">Order status and delivery updates</div>
+              </div>
+              <div class="payment-actions">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="smsNotifications">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+            
+            <div class="payment-method">
+              <div class="payment-icon">
+                <i class="fas fa-bell"></i>
+              </div>
+              <div class="payment-details">
+                <div class="payment-name">Push Notifications</div>
+                <div class="payment-info">App notifications and alerts</div>
+              </div>
+              <div class="payment-actions">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="pushNotifications" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <button class="btn-save" onclick="saveNotificationPreferences()">
+            <i class="fas fa-save"></i> Save Preferences
+          </button>
+        </div>
+        
+        <!-- Privacy Section -->
+        <div id="privacySection" class="content-section">
+          <div class="section-title">
+            <i class="fas fa-user-shield"></i> Privacy Settings
+          </div>
+          
+          <div class="payment-methods">
+            <div class="payment-method">
+              <div class="payment-icon">
+                <i class="fas fa-eye"></i>
+              </div>
+              <div class="payment-details">
+                <div class="payment-name">Profile Visibility</div>
+                <div class="payment-info">Control who can see your profile</div>
+              </div>
+              <div class="payment-actions">
+                <select class="btn-action" id="profileVisibility">
+                  <option value="public">Public</option>
+                  <option value="friends">Friends Only</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="payment-method">
+              <div class="payment-icon">
+                <i class="fas fa-location-arrow"></i>
+              </div>
+              <div class="payment-details">
+                <div class="payment-name">Location Services</div>
+                <div class="payment-info">Allow location-based features</div>
+              </div>
+              <div class="payment-actions">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="locationServices">
+                  <span class="slider"></span>
+                </label>
+              </div>
+    </div>
+
+            <div class="payment-method">
+              <div class="payment-icon">
+                <i class="fas fa-cookie-bite"></i>
+              </div>
+              <div class="payment-details">
+                <div class="payment-name">Cookie Preferences</div>
+                <div class="payment-info">Manage cookie settings</div>
+              </div>
+              <div class="payment-actions">
+                <button class="btn-action btn-edit" onclick="manageCookies()">Manage</button>
+              </div>
+            </div>
+    </div>
+
+          <button class="btn-save" onclick="savePrivacySettings()">
+            <i class="fas fa-save"></i> Save Privacy Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
+  <script>
+    // Enhanced Account Management
+    class AccountManager {
+      constructor() {
+        this.loadAccountData();
+        this.initializeEventListeners();
+        this.updateStats();
+      }
+      
+      loadAccountData() {
+        // Load user data and preferences
+        const userData = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        const preferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
+        
+        // Set default values
+        this.userData = {
+          name: userData.name || 'John Doe',
+          email: userData.email || 'john@example.com',
+          phone: userData.phone || '+919876543210',
+          ...userData
+        };
+        
+        this.preferences = {
+          emailNotifications: preferences.emailNotifications !== false,
+          smsNotifications: preferences.smsNotifications === true,
+          pushNotifications: preferences.pushNotifications !== false,
+          locationServices: preferences.locationServices === true,
+          ...preferences
+        };
+      }
+      
+      updateStats() {
+        // Load orders for stats
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        
+        document.getElementById('totalOrders').textContent = orders.length;
+        document.getElementById('totalSpent').textContent = `₹${orders.reduce((sum, order) => sum + order.total, 0).toFixed(2)}`;
+        document.getElementById('wishlistItems').textContent = wishlist.length;
+        document.getElementById('reviews').textContent = '5'; // Demo value
+      }
+      
+      initializeEventListeners() {
+        // Form submissions
+        document.getElementById('addressForm')?.addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.saveAddress();
+        });
+        
+        document.getElementById('securityForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+          this.updatePassword();
+        });
+      }
+      
+      saveAddress() {
+        const formData = new FormData(document.getElementById('addressForm'));
+        const address = {
+          type: formData.get('addressType'),
+          name: formData.get('addressName'),
+          fullName: formData.get('fullName'),
+          line1: formData.get('addressLine1'),
+          line2: formData.get('addressLine2'),
+          city: formData.get('city'),
+          state: formData.get('state'),
+          zipCode: formData.get('zipCode'),
+          country: formData.get('country'),
+          phone: formData.get('phone'),
+          isDefault: formData.get('defaultAddress') === 'on'
+        };
+        
+        // Save to localStorage
+        let addresses = JSON.parse(localStorage.getItem('userAddresses') || '[]');
+        if (address.isDefault) {
+          addresses.forEach(addr => addr.isDefault = false);
+        }
+        addresses.push(address);
+        localStorage.setItem('userAddresses', JSON.stringify(addresses));
+        
+        alert('Address saved successfully!');
+        document.getElementById('addressForm').reset();
+      }
+      
+      updatePassword() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (newPassword !== confirmPassword) {
+          alert('New passwords do not match!');
+          return;
+        }
+        
+        if (newPassword.length < 6) {
+          alert('Password must be at least 6 characters long!');
+          return;
+        }
+        
+        alert('Password updated successfully!');
+        document.getElementById('securityForm').reset();
+      }
+    }
+    
+    // Global functions
+    function showSection(sectionName) {
+      // Hide all sections
+      document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+      });
+      
+      // Remove active class from all nav items
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      
+      // Show selected section
+      document.getElementById(sectionName + 'Section').classList.add('active');
+      
+      // Add active class to clicked nav item
+      event.target.classList.add('active');
+    }
+    
+    function editPaymentMethod(method) {
+      alert(`Edit ${method} payment method`);
+    }
+    
+    function setDefaultPayment(method) {
+      alert(`${method} set as default payment method`);
+    }
+    
+    function deletePaymentMethod(method) {
+      if (confirm(`Are you sure you want to delete ${method} payment method?`)) {
+        alert(`${method} payment method deleted`);
+      }
+    }
+    
+    function addPaymentMethod() {
+      alert('Add new payment method');
+    }
+    
+    function enable2FA(type) {
+      alert(`Enable ${type} two-factor authentication`);
+    }
+    
+    function saveNotificationPreferences() {
+      const preferences = {
+        emailNotifications: document.getElementById('emailNotifications').checked,
+        smsNotifications: document.getElementById('smsNotifications').checked,
+        pushNotifications: document.getElementById('pushNotifications').checked
+      };
+      
+      localStorage.setItem('userPreferences', JSON.stringify(preferences));
+      alert('Notification preferences saved!');
+    }
+    
+    function manageCookies() {
+      alert('Manage cookie preferences');
+    }
+    
+    function savePrivacySettings() {
+      const settings = {
+        profileVisibility: document.getElementById('profileVisibility').value,
+        locationServices: document.getElementById('locationServices').checked
+      };
+      
+      localStorage.setItem('privacySettings', JSON.stringify(settings));
+      alert('Privacy settings saved!');
+    }
+    
+    // Initialize account manager
+    let accountManager;
+    document.addEventListener('DOMContentLoaded', () => {
+      accountManager = new AccountManager();
+    });
+  </script>
+</body>
+</html>

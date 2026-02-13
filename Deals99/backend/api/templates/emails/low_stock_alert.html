@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .alert-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+            color: #666;
+            background-color: #f9f9f9;
+            border-radius: 0 0 5px 5px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ Low Stock Alert</h1>
+        </div>
+        
+        <div class="content">
+            <p>Admin Alert,</p>
+            
+            <p>The following product has reached a low stock level and requires attention:</p>
+            
+            <div class="alert-box">
+                <p><strong>Product Name:</strong> {{ product.name }}</p>
+                <p><strong>Product ID:</strong> {{ product.id }}</p>
+                <p><strong>Current Stock:</strong> <span style="color: #dc3545; font-weight: bold;">{{ current_stock }}</span> units</p>
+                <p><strong>Low Stock Threshold:</strong> {{ low_stock_threshold }} units</p>
+            </div>
+            
+            <h3>Recommended Actions:</h3>
+            <ul>
+                <li>Review the current stock level</li>
+                <li>Plan inventory replenishment if needed</li>
+                <li>Monitor sales velocity for this product</li>
+                <li>Consider promotional pricing to manage stock</li>
+            </ul>
+            
+            <p>Please log in to the admin panel to manage inventory:</p>
+            
+            <a href="{{ site_url }}/admin/api/product/{{ product.id }}/change/" class="button">Manage Inventory</a>
+            
+            <p>Best regards,<br>Deals99 System</p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated alert. Please do not reply to this address.</p>
+            <p>&copy; 2026 Deals99. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

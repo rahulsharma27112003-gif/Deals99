@@ -1,0 +1,20 @@
+{
+    "cookies":  [
+                    {
+                        "Comment":  "",
+                        "CommentUri":  null,
+                        "HttpOnly":  false,
+                        "Discard":  false,
+                        "Domain":  "127.0.0.1",
+                        "Expired":  false,
+                        "Expires":  "\/Date(1800993861000)\/",
+                        "Name":  "csrftoken",
+                        "Path":  "/",
+                        "Port":  "",
+                        "Secure":  false,
+                        "TimeStamp":  "\/Date(1769544261805)\/",
+                        "Value":  "yfsMCW6hKOKRZHpj9MnFKBvfkXLAkxLk",
+                        "Version":  0
+                    }
+                ]
+}

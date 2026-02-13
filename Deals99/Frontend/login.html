@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Deals99 | Premium Shopping Experience</title>
+  <meta name="description" content="Login to your Deals99 account to access exclusive deals, track orders, and manage your profile.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="global.css">
+</head>
+<body class="bg-light">
+  <!-- Professional Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light" aria-label="Main navigation">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <i class="fas fa-tags"></i> Deals99
+      </a>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+      
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav me-4">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">
+              <i class="fas fa-home"></i> Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="register.html">
+              <i class="fas fa-user-plus"></i> Register
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Login Section -->
+  <section class="section">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8 col-sm-12">
+          <div class="card shadow-lg border-0">
+            <div class="card-header bg-primary text-white text-center py-4">
+              <h2 class="mb-0">
+                <i class="fas fa-sign-in-alt me-2"></i>Welcome Back
+              </h2>
+              <p class="mb-0 mt-2 opacity-75">Login to your Deals99 account</p>
+            </div>
+            
+            <div class="card-body p-5">
+              <form id="loginForm" class="needs-validation" novalidate>
+                <!-- Email Field -->
+                <div class="mb-4">
+                  <label for="email" class="form-label">
+                    <i class="fas fa-envelope me-2"></i>Email Address
+                  </label>
+                  <input type="email" class="form-control" id="email" name="email" 
+                         placeholder="Enter your email" required>
+                  <div class="invalid-feedback">
+                    Please enter a valid email address.
+                  </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="mb-4">
+                  <label for="password" class="form-label">
+                    <i class="fas fa-lock me-2"></i>Password
+                  </label>
+                  <div class="input-group">
+                    <input type="password" class="form-control" id="password" name="password" 
+                           placeholder="Enter your password" required>
+                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </div>
+                  <div class="invalid-feedback">
+                    Please enter your password.
+                  </div>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="row mb-4">
+                  <div class="col-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" id="rememberMe">
+                      <label class="form-check-label" for="rememberMe">
+                        Remember me
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-6 text-end">
+                    <a href="#" class="text-decoration-none">Forgot Password?</a>
+                  </div>
+                </div>
+
+                <!-- Login Button -->
+                <div class="d-grid mb-4">
+                  <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                  </button>
+                </div>
+
+                <!-- Divider -->
+                <div class="text-center mb-4">
+                  <span class="bg-white px-3 text-muted">or</span>
+                  <hr class="mt-n3">
+                </div>
+
+                <!-- Social Login -->
+                <div class="row g-3 mb-4">
+                  <div class="col-6">
+                    <button type="button" class="btn btn-outline-dark w-100">
+                      <i class="fab fa-google me-2"></i>Google
+                    </button>
+                  </div>
+                  <div class="col-6">
+                    <button type="button" class="btn btn-outline-primary w-100">
+                      <i class="fab fa-facebook me-2"></i>Facebook
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Register Link -->
+                <div class="text-center">
+                  <p class="mb-0">
+                    Don't have an account? 
+                    <a href="register.html" class="text-decoration-none fw-bold">Register here</a>
+                  </p>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Admin Login Card -->
+          <div class="card mt-4 shadow border-0">
+            <div class="card-header bg-secondary text-white text-center py-3">
+              <h5 class="mb-0">
+                <i class="fas fa-user-shield me-2"></i>Admin Login
+              </h5>
+            </div>
+            
+            <div class="card-body p-4">
+              <form id="adminLoginForm" class="needs-validation" novalidate>
+                <div class="mb-3">
+                  <label for="adminUsername" class="form-label">Admin Username</label>
+                  <input type="text" class="form-control" id="adminUsername" 
+                         placeholder="Enter admin username" required>
+                </div>
+                
+                <div class="mb-3">
+                  <label for="adminPassword" class="form-label">Admin Password</label>
+                  <input type="password" class="form-control" id="adminPassword" 
+                         placeholder="Enter admin password" required>
+                </div>
+                
+                <div class="d-grid">
+                  <button type="submit" class="btn btn-secondary">
+                    <i class="fas fa-user-shield me-2"></i>Admin Login
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="section bg-light">
+    <div class="container">
+      <h2 class="section-title text-center">Why Choose Deals99?</h2>
+      <div class="grid grid-3">
+        <div class="card text-center hover-lift">
+          <div class="card-body">
+            <div class="mb-3">
+              <i class="fas fa-shipping-fast fa-3x text-primary"></i>
+            </div>
+            <h5 class="card-title">Fast Delivery</h5>
+            <p class="card-text">Get your orders delivered within 2-3 business days with our premium shipping service.</p>
+          </div>
+        </div>
+
+        <div class="card text-center hover-lift">
+          <div class="card-body">
+            <div class="mb-3">
+              <i class="fas fa-shield-alt fa-3x text-success"></i>
+            </div>
+            <h5 class="card-title">Secure Shopping</h5>
+            <p class="card-text">Shop with confidence with our SSL encrypted payment gateway and secure checkout.</p>
+          </div>
+        </div>
+
+        <div class="card text-center hover-lift">
+          <div class="card-body">
+            <div class="mb-3">
+              <i class="fas fa-headset fa-3x text-info"></i>
+            </div>
+            <h5 class="card-title">24/7 Support</h5>
+            <p class="card-text">Our customer support team is available round the clock to assist you with any queries.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Professional Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3><i class="fas fa-tags"></i> Deals99</h3>
+          <p>Your trusted e-commerce partner for amazing deals and premium shopping experience.</p>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul class="list-unstyled">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="register.html">Register</a></li>
+            <li><a href="special-offer.html">Special Offers</a></li>
+            <li><a href="contact.html">Contact Us</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Support</h3>
+          <ul class="list-unstyled">
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms & Conditions</a></li>
+            <li><a href="help.html">Help Center</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="mb-0">&copy; 2025 Deals99. All rights reserved.</p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <p class="mb-0">Secure login with SSL encryption</p>
+          </div>
+        </div>
+    </div>
+  </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
+  
+  <script>
+    // Password toggle functionality
+    document.getElementById('togglePassword').addEventListener('click', function() {
+      const password = document.getElementById('password');
+      const icon = this.querySelector('i');
+      
+      if (password.type === 'password') {
+        password.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        password.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    });
+
+    // Form validation
+    function validateForm(form) {
+      const inputs = form.querySelectorAll('input[required]');
+      let isValid = true;
+      
+      inputs.forEach(input => {
+        if (!input.value.trim()) {
+          input.classList.add('is-invalid');
+          isValid = false;
+        } else {
+          input.classList.remove('is-invalid');
+          input.classList.add('is-valid');
+        }
+      });
+      
+      return isValid;
+    }
+
+    // Login form submission
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      if (!validateForm(this)) {
+        return;
+      }
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const rememberMe = document.getElementById('rememberMe').checked;
+      
+      // Simulate login process
+      const submitBtn = this.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...';
+      submitBtn.disabled = true;
+      
+      setTimeout(() => {
+        // Store user data
+        const user = {
+          name: email.split('@')[0],
+          email: email,
+          loginTime: new Date().toISOString()
+        };
+        
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        localStorage.setItem('isLoggedIn', 'true');
+        
+        if (rememberMe) {
+          localStorage.setItem('rememberMe', 'true');
+        }
+        
+        // Show success message
+        showToast('Login successful! Redirecting...', 'success');
+        
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 1500);
+        
+      }, 2000);
+    });
+
+    // Admin login form submission
+    document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      if (!validateForm(this)) {
+        return;
+      }
+      
+      const username = document.getElementById('adminUsername').value;
+      const password = document.getElementById('adminPassword').value;
+      
+      // Simple admin validation (in real app, this would be server-side)
+      if (username === 'admin' && password === 'admin123') {
+        localStorage.setItem('isAdminLoggedIn', 'true');
+        showToast('Admin login successful!', 'success');
+        
+        setTimeout(() => {
+          window.location.href = 'admin.html';
+        }, 1500);
+      } else {
+        showToast('Invalid admin credentials!', 'error');
+      }
+    });
+
+    // Toast notification function
+    function showToast(message, type = 'info') {
+      const toastContainer = document.createElement('div');
+      toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+      toastContainer.style.zIndex = '9999';
+      
+      const toast = document.createElement('div');
+      toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'primary'} border-0`;
+      toast.setAttribute('role', 'alert');
+      toast.setAttribute('aria-live', 'assertive');
+      toast.setAttribute('aria-atomic', 'true');
+      
+      toast.innerHTML = `
+        <div class="d-flex">
+          <div class="toast-body">
+            ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      `;
+      
+      toastContainer.appendChild(toast);
+      document.body.appendChild(toastContainer);
+      
+      const bsToast = new bootstrap.Toast(toast);
+      bsToast.show();
+      
+      // Remove toast container after toast is hidden
+      toast.addEventListener('hidden.bs.toast', () => {
+        document.body.removeChild(toastContainer);
+      });
+    }
+
+    // Check if user is already logged in
+    document.addEventListener('DOMContentLoaded', function() {
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+      
+      if (isLoggedIn) {
+        window.location.href = 'index.html';
+      } else if (isAdminLoggedIn) {
+        window.location.href = 'admin.html';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart - Deals99</title>
+  <meta name="description" content="View and manage your shopping cart items. Secure checkout with multiple payment options.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="global.css">
+</head>
+<body>
+  <!-- Professional Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light" aria-label="Main navigation">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">
+        <i class="fas fa-tags"></i> Deals99
+      </a>
+      
+      <!-- Search Bar -->
+      <div class="d-none d-md-flex flex-grow-1 mx-4">
+        <form class="d-flex w-100" role="search">
+          <div class="input-group">
+            <input class="form-control" type="search" placeholder="Search products, deals, categories..." aria-label="Search">
+            <button class="btn btn-primary" type="submit">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav me-4">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">
+              <i class="fas fa-home"></i> Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="special-offer.html">
+              <i class="fas fa-star"></i> Offers
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="combooffers.html">
+              <i class="fas fa-box"></i> Combos
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="today99offer.html">
+              <i class="fas fa-tag"></i> ₹99 Deals
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="categories.html">
+              <i class="fas fa-th-large"></i> Categories
+            </a>
+          </li>
+        </ul>
+        
+        <div class="d-flex align-items-center gap-3" id="authArea">
+          <!-- Auth buttons will be rendered here -->
+        </div>
+        
+        <div class="d-flex align-items-center gap-3 ms-3">
+          <a href="cart.html" class="btn btn-primary position-relative" title="Shopping Cart">
+            <i class="fas fa-shopping-cart"></i>
+            <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;">0</span>
+          </a>
+          <a href="wishlist.html" class="btn btn-outline-danger position-relative" title="Wishlist">
+            <i class="fas fa-heart"></i>
+            <span id="wishlistCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning" style="display:none;">0</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <section class="page-header bg-primary text-white">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <h1 class="display-5 fw-bold mb-2">
+            <i class="fas fa-shopping-cart me-3"></i>Shopping Cart
+          </h1>
+          <p class="lead mb-0">Review your items and proceed to checkout</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb justify-content-md-end mb-0">
+              <li class="breadcrumb-item"><a href="index.html" class="text-white-50">Home</a></li>
+              <li class="breadcrumb-item active text-white" aria-current="page">Cart</li>
+            </ol>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cart Section -->
+  <section class="section">
+    <div class="container">
+      <div class="row">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+          <div class="card shadow-sm">
+            <div class="card-header bg-white">
+              <div class="d-flex justify-content-between align-items-center">
+                <h3 class="h5 mb-0">
+                  <i class="fas fa-shopping-bag me-2"></i>Cart Items
+                </h3>
+                <button class="btn btn-outline-danger btn-sm" onclick="cartManager.clearCart()">
+                  <i class="fas fa-trash me-1"></i>Clear Cart
+                </button>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div id="cartItems">
+                <!-- Cart items will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+          <div class="card shadow-sm sticky-top" style="top: 2rem;">
+            <div class="card-header bg-white">
+              <h3 class="h5 mb-0">
+                <i class="fas fa-calculator me-2"></i>Order Summary
+              </h3>
+            </div>
+            <div class="card-body">
+              <div class="summary-item d-flex justify-content-between mb-2">
+                <span>Subtotal:</span>
+                <span id="subtotal">₹0</span>
+              </div>
+              <div class="summary-item d-flex justify-content-between mb-2">
+                <span>Shipping:</span>
+                <span id="shipping">₹0</span>
+              </div>
+              <div class="summary-item d-flex justify-content-between mb-2">
+                <span>Tax:</span>
+                <span id="tax">₹0</span>
+              </div>
+              <hr>
+              <div class="summary-item d-flex justify-content-between mb-3">
+                <strong>Total:</strong>
+                <strong id="total">₹0</strong>
+              </div>
+              
+              <div class="d-grid gap-2">
+                <a href="checkout.html" class="btn btn-primary btn-lg" id="checkoutBtn">
+                  <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                </a>
+                <a href="index.html" class="btn btn-outline-primary">
+                  <i class="fas fa-arrow-left me-2"></i>Continue Shopping
+                </a>
+              </div>
+
+              <!-- Coupon Code -->
+              <div class="mt-4">
+                <h6 class="mb-3">Have a coupon?</h6>
+                <div class="input-group">
+                  <input type="text" class="form-control" placeholder="Enter coupon code" id="couponCode">
+                  <button class="btn btn-outline-secondary" type="button" onclick="applyCoupon()">
+                    Apply
+                  </button>
+                </div>
+                <div id="couponMessage" class="mt-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recommended Products -->
+  <section class="section bg-light">
+    <div class="container">
+      <h2 class="section-title">You might also like</h2>
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4" id="recommendedProducts">
+        <!-- Recommended products will be loaded here -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Professional Footer -->
+  <footer class="footer">
+  <div class="container">
+      <div class="footer-content">
+        <div class="footer-section">
+          <h3><i class="fas fa-tags"></i> Deals99</h3>
+          <p>Your trusted e-commerce partner for amazing deals and premium shopping experience.</p>
+          <div class="d-flex gap-2 mt-3">
+            <a href="#" class="btn btn-outline-light btn-sm">
+              <i class="fab fa-facebook"></i>
+            </a>
+            <a href="#" class="btn btn-outline-light btn-sm">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a href="#" class="btn btn-outline-light btn-sm">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="btn btn-outline-light btn-sm">
+              <i class="fab fa-youtube"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer-section">
+          <h3>Quick Links</h3>
+          <ul class="list-unstyled">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="special-offer.html">Special Offers</a></li>
+            <li><a href="combooffers.html">Combo Offers</a></li>
+            <li><a href="today99offer.html">₹99 Deals</a></li>
+            <li><a href="categories.html">Categories</a></li>
+            <li><a href="cart.html">Shopping Cart</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Customer Service</h3>
+          <ul class="list-unstyled">
+            <li><a href="contact.html">Contact Us</a></li>
+            <li><a href="order.html">Track Order</a></li>
+            <li><a href="account.html">My Account</a></li>
+            <li><a href="wishlist.html">Wishlist</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+            <li><a href="terms.html">Terms & Conditions</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-section">
+          <h3>Payment Methods</h3>
+          <div class="d-flex gap-2 flex-wrap">
+            <i class="fab fa-cc-visa fa-2x text-white"></i>
+            <i class="fab fa-cc-mastercard fa-2x text-white"></i>
+            <i class="fab fa-cc-paypal fa-2x text-white"></i>
+            <i class="fas fa-university fa-2x text-white"></i>
+          </div>
+          <p class="mt-3 small">Secure payments with SSL encryption</p>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="mb-0">&copy; 2025 Deals99. All rights reserved.</p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <p class="mb-0">Made with <i class="fas fa-heart text-danger"></i> for our customers</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Notification Toast -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer">
+    <!-- Toasts will be added here dynamically -->
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
+  
+  <script>
+    // Cart page specific functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load cart items
+      loadCartItems();
+      
+      // Load recommended products
+      loadRecommendedProducts();
+      
+      // Update summary
+      updateOrderSummary();
+    });
+
+    function loadCartItems() {
+      const cartItems = StorageManager.get('cart');
+      const container = document.getElementById('cartItems');
+      
+      if (!container) return;
+      
+      if (cartItems.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-5">
+            <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">Your cart is empty</h4>
+            <p class="text-muted">Add some products to get started!</p>
+            <a href="index.html" class="btn btn-primary">
+              <i class="fas fa-shopping-bag me-2"></i>Continue Shopping
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      const cartHTML = cartItems.map((item, index) => `
+        <div class="cart-item border-bottom p-4" data-index="${index}">
+          <div class="row align-items-center">
+            <div class="col-md-2 col-4">
+              <img src="${item.img || 'https://via.placeholder.com/100x100'}" 
+                   alt="${item.name}" class="img-fluid rounded">
+            </div>
+            <div class="col-md-4 col-8">
+              <h6 class="mb-1">${item.name}</h6>
+              <p class="text-muted small mb-0">${item.desc || ''}</p>
+              <div class="mt-2">
+                <span class="badge bg-primary">${item.category || 'General'}</span>
+              </div>
+            </div>
+            <div class="col-md-2 col-6">
+              <div class="input-group input-group-sm">
+                <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity('${item.id || item.name}', ${(item.qty || 1) - 1})">
+                  <i class="fas fa-minus"></i>
+                </button>
+                <input type="number" class="form-control text-center" value="${item.qty || 1}" 
+                       min="1" max="10" onchange="updateQuantity('${item.id || item.name}', this.value)">
+                <button class="btn btn-outline-secondary" type="button" onclick="updateQuantity('${item.id || item.name}', ${(item.qty || 1) + 1})">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="col-md-2 col-6 text-center">
+              <div class="price-info">
+                <span class="text-success fw-bold">₹${item.price || item.discounted || item.mrp || 0}</span>
+                ${item.mrp && item.mrp > (item.price || item.discounted) ? 
+                  `<br><small class="text-muted text-decoration-line-through">₹${item.mrp}</small>` : ''}
+              </div>
+            </div>
+            <div class="col-md-2 col-12 text-end">
+              <button class="btn btn-outline-danger btn-sm" onclick="removeFromCart('${item.id || item.name}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+        </div>
+        </div>
+      `).join('');
+
+      container.innerHTML = cartHTML;
+    }
+
+    function updateQuantity(productId, newQty) {
+      cartManager.updateQuantity(productId, newQty);
+      loadCartItems();
+      updateOrderSummary();
+    }
+
+    function removeFromCart(productId) {
+      cartManager.removeItem(productId);
+      loadCartItems();
+      updateOrderSummary();
+    }
+
+    function updateOrderSummary() {
+      const cartItems = StorageManager.get('cart');
+      const subtotal = cartItems.reduce((total, item) => {
+        const price = item.price || item.discounted || item.mrp || 0;
+        const qty = item.qty || 1;
+        return total + (price * qty);
+      }, 0);
+      
+      const shipping = subtotal > 500 ? 0 : 50;
+      const tax = subtotal * 0.18; // 18% GST
+      const total = subtotal + shipping + tax;
+      
+      document.getElementById('subtotal').textContent = `₹${subtotal.toFixed(2)}`;
+      document.getElementById('shipping').textContent = `₹${shipping.toFixed(2)}`;
+      document.getElementById('tax').textContent = `₹${tax.toFixed(2)}`;
+      document.getElementById('total').textContent = `₹${total.toFixed(2)}`;
+      
+      // Disable checkout if cart is empty
+      const checkoutBtn = document.getElementById('checkoutBtn');
+      if (checkoutBtn) {
+        checkoutBtn.classList.toggle('disabled', cartItems.length === 0);
+      }
+    }
+
+    function loadRecommendedProducts() {
+      const container = document.getElementById('recommendedProducts');
+      if (!container) return;
+      
+      const sampleProducts = [
+        {
+          name: "Wireless Earbuds",
+          price: 899,
+          mrp: 1499,
+          img: "https://cdn-icons-png.flaticon.com/512/1048/1048927.png",
+          category: "Electronics"
+        },
+        {
+          name: "Smart Band",
+          price: 1299,
+          mrp: 1999,
+          img: "https://cdn-icons-png.flaticon.com/512/3134/3134810.png",
+          category: "Electronics"
+        },
+        {
+          name: "Custom Hoodie",
+          price: 799,
+          mrp: 1299,
+          img: "https://cdn-icons-png.flaticon.com/512/3135/3135706.png",
+          category: "Fashion"
+        },
+        {
+          name: "Phone Stand",
+          price: 199,
+          mrp: 399,
+          img: "https://cdn-icons-png.flaticon.com/512/2921/2921822.png",
+          category: "Electronics"
+        }
+      ];
+      
+      const productsHTML = sampleProducts.map(product => `
+        <div class="col">
+          <div class="card h-100 product-card">
+            <div class="card-body text-center">
+              <img src="${product.img}" alt="${product.name}" class="img-fluid mb-3" style="height: 100px; object-fit: contain;">
+              <h6 class="card-title">${product.name}</h6>
+              <p class="text-success fw-bold">₹${product.price}</p>
+              <p class="text-muted text-decoration-line-through small">₹${product.mrp}</p>
+              <button class="btn btn-primary btn-sm add-to-cart" 
+                      data-name="${product.name}" 
+                      data-price="${product.price}" 
+                      data-img="${product.img}" 
+                      data-category="${product.category}">
+                <i class="fas fa-cart-plus me-1"></i>Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      container.innerHTML = productsHTML;
+    }
+
+    function applyCoupon() {
+      const couponCode = document.getElementById('couponCode').value.trim();
+      const messageDiv = document.getElementById('couponMessage');
+      
+      if (!couponCode) {
+        messageDiv.innerHTML = '<div class="alert alert-warning">Please enter a coupon code</div>';
+        return;
+      }
+      
+      // Sample coupon codes
+      const validCoupons = {
+        'WELCOME10': 10,
+        'SAVE20': 20,
+        'FREESHIP': 0
+      };
+      
+      if (validCoupons[couponCode]) {
+        const discount = validCoupons[couponCode];
+        messageDiv.innerHTML = `<div class="alert alert-success">Coupon applied! ${discount > 0 ? discount + '% discount' : 'Free shipping'}</div>`;
+        // Apply discount logic here
+          } else {
+        messageDiv.innerHTML = '<div class="alert alert-danger">Invalid coupon code</div>';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deals99 - Auto JavaScript Test</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="global.css">
+  <style>
+    .auto-test-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .test-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .test-result {
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .info { background: #d1ecf1; color: #0c5460; }
+    .warning { background: #fff3cd; color: #856404; }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #e9ecef;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #e91e63, #ff6b9d);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .auto-actions {
+      display: flex;
+      gap: 1rem;
+      margin: 1rem 0;
+      flex-wrap: wrap;
+    }
+    .auto-btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .btn-primary { background: #e91e63; color: white; }
+    .btn-success { background: #27ae60; color: white; }
+    .btn-warning { background: #f39c12; color: white; }
+    .btn-danger { background: #e74c3c; color: white; }
+    .btn-info { background: #3498db; color: white; }
+  </style>
+</head>
+<body>
+  <div class="auto-test-container">
+    <h1><i class="fas fa-robot"></i> Deals99 Auto JavaScript Test</h1>
+    
+    <div class="test-section">
+      <h3><i class="fas fa-cogs"></i> Test Progress</h3>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressBar"></div>
+      </div>
+      <div id="progressText">Initializing...</div>
+    </div>
+
+    <div class="test-section">
+      <h3><i class="fas fa-play"></i> Auto Actions</h3>
+      <div class="auto-actions">
+        <button class="auto-btn btn-primary" onclick="runAutoCartTest()">Test Cart Functions</button>
+        <button class="auto-btn btn-success" onclick="runAutoWishlistTest()">Test Wishlist Functions</button>
+        <button class="auto-btn btn-warning" onclick="runAutoUserTest()">Test User Functions</button>
+        <button class="auto-btn btn-info" onclick="runAutoProductTest()">Test Product Functions</button>
+        <button class="auto-btn btn-danger" onclick="runAutoNotificationTest()">Test Notifications</button>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3><i class="fas fa-list"></i> Test Results</h3>
+      <div id="testResults">
+        <p class="text-muted">Test results will appear here...</p>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3><i class="fas fa-shopping-cart"></i> Live Cart Demo</h3>
+      <div id="cartDemo">
+        <p>Cart items will appear here...</p>
+      </div>
+      <div class="auto-actions">
+        <button class="auto-btn btn-primary" onclick="addDemoProduct()">Add Demo Product</button>
+        <button class="auto-btn btn-success" onclick="clearDemoCart()">Clear Cart</button>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3><i class="fas fa-heart"></i> Live Wishlist Demo</h3>
+      <div id="wishlistDemo">
+        <p>Wishlist items will appear here...</p>
+      </div>
+      <div class="auto-actions">
+        <button class="auto-btn btn-primary" onclick="addDemoWishlist()">Add to Wishlist</button>
+        <button class="auto-btn btn-success" onclick="clearDemoWishlist()">Clear Wishlist</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    let testCount = 0;
+    let totalTests = 0;
+
+    function addResult(message, type = 'info') {
+      const results = document.getElementById('testResults');
+      const timestamp = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.className = `test-result ${type}`;
+      div.innerHTML = `<strong>${timestamp}:</strong> ${message}`;
+      results.appendChild(div);
+      results.scrollTop = results.scrollHeight;
+      
+      // Update progress
+      testCount++;
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+      const percentage = totalTests > 0 ? (testCount / totalTests) * 100 : 0;
+      
+      progressBar.style.width = `${percentage}%`;
+      progressText.textContent = `Tests completed: ${testCount}/${totalTests} (${Math.round(percentage)}%)`;
+    }
+
+    // Auto Cart Test
+    function runAutoCartTest() {
+      addResult('🚀 Starting Auto Cart Test...', 'info');
+      totalTests += 5;
+      
+      setTimeout(() => {
+        try {
+          if (window.CartManager) {
+            addResult('✅ CartManager is available', 'success');
+            
+            // Test adding product
+            const testProduct = { name: 'Auto Test Product', price: 99, category: 'Test' };
+            window.CartManager.addToCart(testProduct);
+            addResult('✅ Product added to cart', 'success');
+            
+            // Test getting cart
+            const cart = window.CartManager.getCart();
+            addResult(`✅ Cart retrieved (${cart.length} items)`, 'success');
+            
+            // Test cart count
+            const count = window.CartManager.getCartCount();
+            addResult(`✅ Cart count: ${count}`, 'success');
+            
+            // Test cart total
+            const total = window.CartManager.getCartTotal();
+            addResult(`✅ Cart total: ₹${total}`, 'success');
+            
+            updateCartDemo();
+          } else {
+            addResult('❌ CartManager not available', 'error');
+          }
+        } catch (e) {
+          addResult(`❌ Cart test error: ${e.message}`, 'error');
+        }
+      }, 500);
+    }
+
+    // Auto Wishlist Test
+    function runAutoWishlistTest() {
+      addResult('🚀 Starting Auto Wishlist Test...', 'info');
+      totalTests += 4;
+      
+      setTimeout(() => {
+        try {
+          if (window.WishlistManager) {
+            addResult('✅ WishlistManager is available', 'success');
+            
+            // Test adding to wishlist
+            const testProduct = { name: 'Auto Wishlist Product', price: 199, category: 'Test' };
+            window.WishlistManager.addToWishlist(testProduct);
+            addResult('✅ Product added to wishlist', 'success');
+            
+            // Test getting wishlist
+            const wishlist = window.WishlistManager.getWishlist();
+            addResult(`✅ Wishlist retrieved (${wishlist.length} items)`, 'success');
+            
+            // Test wishlist check
+            const isInWishlist = window.WishlistManager.isInWishlist('Auto Wishlist Product');
+            addResult(`✅ Wishlist check: ${isInWishlist}`, 'success');
+            
+            updateWishlistDemo();
+          } else {
+            addResult('❌ WishlistManager not available', 'error');
+          }
+        } catch (e) {
+          addResult(`❌ Wishlist test error: ${e.message}`, 'error');
+        }
+      }, 500);
+    }
+
+    // Auto User Test
+    function runAutoUserTest() {
+      addResult('🚀 Starting Auto User Test...', 'info');
+      totalTests += 3;
+      
+      setTimeout(() => {
+        try {
+          if (window.UserManager) {
+            addResult('✅ UserManager is available', 'success');
+            
+            // Test login status
+            const isLoggedIn = window.UserManager.isLoggedIn();
+            addResult(`✅ Login status: ${isLoggedIn}`, 'success');
+            
+            // Test admin status
+            const isAdmin = window.UserManager.isAdmin();
+            addResult(`✅ Admin status: ${isAdmin}`, 'success');
+            
+            // Test current user
+            const user = window.UserManager.getCurrentUser();
+            addResult(`✅ Current user: ${user ? 'Available' : 'None'}`, 'success');
+          } else {
+            addResult('❌ UserManager not available', 'error');
+          }
+        } catch (e) {
+          addResult(`❌ User test error: ${e.message}`, 'error');
+        }
+      }, 500);
+    }
+
+    // Auto Product Test
+    function runAutoProductTest() {
+      addResult('🚀 Starting Auto Product Test...', 'info');
+      totalTests += 3;
+      
+      setTimeout(() => {
+        try {
+          if (window.ProductManager) {
+            addResult('✅ ProductManager is available', 'success');
+            
+            // Test search
+            const results = window.ProductManager.searchProducts('test');
+            addResult(`✅ Product search: ${results.length} results`, 'success');
+            
+            // Test get all products
+            const allProducts = window.ProductManager.getAllProducts();
+            addResult(`✅ All products: ${allProducts.length} items`, 'success');
+            
+            // Test get product by name
+            const product = window.ProductManager.getProductByName('Test Product');
+            addResult(`✅ Product by name: ${product ? 'Found' : 'Not found'}`, 'success');
+          } else {
+            addResult('❌ ProductManager not available', 'error');
+          }
+        } catch (e) {
+          addResult(`❌ Product test error: ${e.message}`, 'error');
+        }
+      }, 500);
+    }
+
+    // Auto Notification Test
+    function runAutoNotificationTest() {
+      addResult('🚀 Starting Auto Notification Test...', 'info');
+      totalTests += 4;
+      
+      setTimeout(() => {
+        try {
+          if (window.NotificationManager) {
+            addResult('✅ NotificationManager is available', 'success');
+            
+            // Test success notification
+            window.NotificationManager.show('Auto test success!', 'success');
+            addResult('✅ Success notification sent', 'success');
+            
+            // Test error notification
+            setTimeout(() => {
+              window.NotificationManager.show('Auto test error!', 'error');
+              addResult('✅ Error notification sent', 'success');
+            }, 1000);
+            
+            // Test warning notification
+            setTimeout(() => {
+              window.NotificationManager.show('Auto test warning!', 'warning');
+              addResult('✅ Warning notification sent', 'success');
+            }, 2000);
+            
+            // Test info notification
+            setTimeout(() => {
+              window.NotificationManager.show('Auto test info!', 'info');
+              addResult('✅ Info notification sent', 'success');
+            }, 3000);
+          } else {
+            addResult('❌ NotificationManager not available', 'error');
+          }
+        } catch (e) {
+          addResult(`❌ Notification test error: ${e.message}`, 'error');
+        }
+      }, 500);
+    }
+
+    // Demo Functions
+    function addDemoProduct() {
+      try {
+        const demoProducts = [
+          { name: 'Demo T-Shirt', price: 299, category: 'Fashion' },
+          { name: 'Demo Headphones', price: 599, category: 'Electronics' },
+          { name: 'Demo Keychain', price: 99, category: 'Gifts' },
+          { name: 'Demo Mug', price: 149, category: 'Home' }
+        ];
+        
+        const randomProduct = demoProducts[Math.floor(Math.random() * demoProducts.length)];
+        window.CartManager.addToCart(randomProduct);
+        addResult(`✅ Added ${randomProduct.name} to cart`, 'success');
+        updateCartDemo();
+      } catch (e) {
+        addResult(`❌ Error adding demo product: ${e.message}`, 'error');
+      }
+    }
+
+    function clearDemoCart() {
+      try {
+        window.CartManager.clearCart();
+        addResult('✅ Cart cleared', 'success');
+        updateCartDemo();
+      } catch (e) {
+        addResult(`❌ Error clearing cart: ${e.message}`, 'error');
+      }
+    }
+
+    function addDemoWishlist() {
+      try {
+        const demoProducts = [
+          { name: 'Wishlist T-Shirt', price: 299, category: 'Fashion' },
+          { name: 'Wishlist Headphones', price: 599, category: 'Electronics' },
+          { name: 'Wishlist Keychain', price: 99, category: 'Gifts' },
+          { name: 'Wishlist Mug', price: 149, category: 'Home' }
+        ];
+        
+        const randomProduct = demoProducts[Math.floor(Math.random() * demoProducts.length)];
+        window.WishlistManager.addToWishlist(randomProduct);
+        addResult(`✅ Added ${randomProduct.name} to wishlist`, 'success');
+        updateWishlistDemo();
+      } catch (e) {
+        addResult(`❌ Error adding to wishlist: ${e.message}`, 'error');
+      }
+    }
+
+    function clearDemoWishlist() {
+      try {
+        window.WishlistManager.clearWishlist();
+        addResult('✅ Wishlist cleared', 'success');
+        updateWishlistDemo();
+      } catch (e) {
+        addResult(`❌ Error clearing wishlist: ${e.message}`, 'error');
+      }
+    }
+
+    function updateCartDemo() {
+      try {
+        const cart = window.CartManager.getCart();
+        const demoDiv = document.getElementById('cartDemo');
+        
+        if (cart.length === 0) {
+          demoDiv.innerHTML = '<p class="text-muted">Cart is empty</p>';
+        } else {
+          let html = '<div class="row">';
+          cart.forEach((item, index) => {
+            html += `
+              <div class="col-md-6 mb-2">
+                <div class="border rounded p-2">
+                  <strong>${item.name}</strong><br>
+                  <small class="text-muted">₹${item.price} | Qty: ${item.quantity || 1}</small>
+                </div>
+              </div>
+            `;
+          });
+          html += '</div>';
+          demoDiv.innerHTML = html;
+        }
+      } catch (e) {
+        document.getElementById('cartDemo').innerHTML = '<p class="text-danger">Error loading cart</p>';
+      }
+    }
+
+    function updateWishlistDemo() {
+      try {
+        const wishlist = window.WishlistManager.getWishlist();
+        const demoDiv = document.getElementById('wishlistDemo');
+        
+        if (wishlist.length === 0) {
+          demoDiv.innerHTML = '<p class="text-muted">Wishlist is empty</p>';
+        } else {
+          let html = '<div class="row">';
+          wishlist.forEach((item, index) => {
+            html += `
+              <div class="col-md-6 mb-2">
+                <div class="border rounded p-2">
+                  <strong>${item.name}</strong><br>
+                  <small class="text-muted">₹${item.price}</small>
+                </div>
+              </div>
+            `;
+          });
+          html += '</div>';
+          demoDiv.innerHTML = html;
+        }
+      } catch (e) {
+        document.getElementById('wishlistDemo').innerHTML = '<p class="text-danger">Error loading wishlist</p>';
+      }
+    }
+
+    // Auto-run all tests on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      addResult('🚀 Auto JavaScript Test Suite Started', 'info');
+      addResult('✅ Enhanced script.js loaded successfully', 'success');
+      
+      // Auto-run all tests after a short delay
+      setTimeout(() => {
+        runAutoCartTest();
+        setTimeout(() => runAutoWishlistTest(), 1000);
+        setTimeout(() => runAutoUserTest(), 2000);
+        setTimeout(() => runAutoProductTest(), 3000);
+        setTimeout(() => runAutoNotificationTest(), 4000);
+      }, 1000);
+    });
+  </script>
+</body>
+</html> 

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .welcome-box {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+            color: #666;
+            background-color: #f9f9f9;
+            border-radius: 0 0 5px 5px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to Deals99!</h1>
+        </div>
+        
+        <div class="content">
+            <p>Hi {{ username }},</p>
+            
+            <p>Welcome to Deals99! We're thrilled to have you join our community.</p>
+            
+            <div class="welcome-box">
+                <p>Your account has been successfully created with the email: <strong>{{ email }}</strong></p>
+                <p>You can now start shopping for amazing deals on electronics, fashion, gifts, and much more!</p>
+            </div>
+            
+            <h3>Here's what you can do:</h3>
+            <ul>
+                <li>Browse our extensive product catalog</li>
+                <li>Add items to your wishlist and cart</li>
+                <li>Check out our daily deals and special offers</li>
+                <li>View your order history and track orders</li>
+                <li>Leave reviews and ratings on products</li>
+                <li>Manage your profile and preferences</li>
+            </ul>
+            
+            <p>Start shopping and discover the best deals online!</p>
+            
+            <a href="{{ site_url }}" class="button">Start Shopping</a>
+            
+            <p>If you have any questions or need assistance, our customer support team is always ready to help.</p>
+            
+            <p>Happy shopping!<br>The Deals99 Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated email. Please do not reply to this address.</p>
+            <p>&copy; 2026 Deals99. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

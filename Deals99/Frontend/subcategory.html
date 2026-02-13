@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subcategories | Deals99</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="global.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f8f9ff 0%, #e8f5e8 100%);
+      font-family: 'Inter', Arial, sans-serif;
+      color: #23272f;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      background: rgba(255,255,255,0.97);
+      border-radius: 24px;
+      box-shadow: 0 25px 80px rgba(76,175,80,0.10), 0 0 0 1px rgba(255,255,255,0.1);
+      padding: 3rem 2.5rem;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    h2 {
+      font-weight: 700;
+      color: #4caf50;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      font-size: 2.2rem;
+      position: relative;
+    }
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, #4caf50, #81c784);
+      border-radius: 2px;
+    }
+    .category-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+      border-radius: 16px;
+      border: 1px solid #c8e6c9;
+    }
+    .category-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 0.5rem;
+    }
+    .category-desc {
+      color: #666;
+      font-size: 1.1rem;
+    }
+    .subcategories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    .subcategory-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(76,175,80,0.08);
+      padding: 2rem 1.5rem 1.5rem 1.5rem;
+      text-align: center;
+      border: 1px solid #e8f5e8;
+      transition: box-shadow 0.2s, transform 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+    .subcategory-card:hover {
+      box-shadow: 0 8px 32px rgba(76,175,80,0.15);
+      transform: translateY(-4px);
+    }
+    .subcategory-icon {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #4caf50, #81c784);
+      color: white;
+      border-radius: 12px;
+      font-size: 1.5rem;
+      margin: 0 auto 1rem;
+      box-shadow: 0 4px 12px rgba(76,175,80,0.3);
+    }
+    .subcategory-name {
+      font-weight: 600;
+      color: #2e7d32;
+      margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+    }
+    .subcategory-desc {
+      color: #666;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      min-height: 40px;
+    }
+    .subcategory-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-number {
+      font-weight: 700;
+      color: #4caf50;
+    }
+    .stat-label {
+      color: #666;
+      font-size: 0.8rem;
+    }
+    .subcategory-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .btn-subcategory {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+    .btn-explore {
+      background: #4caf50;
+      color: #fff;
+    }
+    .btn-explore:hover {
+      background: #388e3c;
+    }
+    .btn-view {
+      background: #fff;
+      color: #4caf50;
+      border: 2px solid #4caf50;
+    }
+    .btn-view:hover {
+      background: #4caf50;
+      color: #fff;
+    }
+    .products-section {
+      margin-top: 3rem;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    .product-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 16px rgba(76,175,80,0.08);
+      border: 1px solid #e8f5e8;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(76,175,80,0.15);
+    }
+    .product-img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border: 2px solid #f0f0f0;
+    }
+    .product-name {
+      font-weight: 600;
+      color: #2e7d32;
+      margin-bottom: 0.5rem;
+    }
+    .product-price {
+      color: #4caf50;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+    .product-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .btn-product {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .btn-add-cart {
+      background: #4caf50;
+      color: white;
+    }
+    .btn-add-cart:hover {
+      background: #388e3c;
+      transform: scale(1.05);
+    }
+    .btn-wishlist {
+      background: #e91e63;
+      color: white;
+    }
+    .btn-wishlist:hover {
+      background: #ad1457;
+      transform: scale(1.05);
+    }
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px auto;
+        padding: 1.5rem 0.5rem;
+        max-width: 98vw;
+      }
+      .subcategories-grid {
+        grid-template-columns: 1fr;
+      }
+      .products-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2><i class="fas fa-th-large"></i> Subcategories</h2>
+    
+    <div class="category-header">
+      <div class="category-title" id="categoryTitle">Fashion</div>
+      <div class="category-desc" id="categoryDesc">Explore our wide range of fashion items</div>
+    </div>
+    
+    <div class="subcategories-grid" id="subcategoriesGrid">
+      <!-- Subcategories will be rendered here -->
+    </div>
+    
+    <div class="products-section" id="productsSection" style="display: none;">
+      <div class="section-title">
+        <i class="fas fa-box"></i> Products in <span id="selectedSubcategory">Subcategory</span>
+        </div>
+      <div class="products-grid" id="productsGrid">
+        <!-- Products will be rendered here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
+  <script>
+    // Demo subcategory data
+    const subcategoryData = {
+      fashion: {
+        name: "Fashion",
+        desc: "Explore our wide range of fashion items",
+        icon: "fas fa-tshirt",
+        subcategories: [
+          { name: "Men's T-Shirts", desc: "Comfortable and stylish t-shirts", icon: "fas fa-male", products: 45, price: "₹299" },
+          { name: "Women's Dresses", desc: "Elegant dresses for every occasion", icon: "fas fa-female", products: 38, price: "₹599" },
+          { name: "Kids Wear", desc: "Cute and comfortable kids clothing", icon: "fas fa-baby", products: 25, price: "₹199" },
+          { name: "Jeans", desc: "Classic and trendy jeans", icon: "fas fa-socks", products: 32, price: "₹799" },
+          { name: "Jackets", desc: "Stylish jackets for all seasons", icon: "fas fa-vest", products: 18, price: "₹1299" }
+        ]
+      },
+      electronics: {
+        name: "Electronics",
+        desc: "Latest gadgets and electronic devices",
+        icon: "fas fa-laptop",
+        subcategories: [
+          { name: "Mobile", desc: "Smartphones and accessories", icon: "fas fa-mobile-alt", products: 67, price: "₹15999" },
+          { name: "Laptop", desc: "High-performance laptops", icon: "fas fa-laptop", products: 23, price: "₹49999" },
+          { name: "Earphones", desc: "Wireless and wired earphones", icon: "fas fa-headphones", products: 41, price: "₹899" },
+          { name: "Speakers", desc: "Portable and home speakers", icon: "fas fa-volume-up", products: 29, price: "₹1499" },
+          { name: "Accessories", desc: "Chargers, cables, and more", icon: "fas fa-plug", products: 55, price: "₹199" }
+        ]
+      },
+      gifts: {
+        name: "Gifts",
+        desc: "Perfect gifts for your loved ones",
+        icon: "fas fa-gift",
+        subcategories: [
+          { name: "Photo Mug", desc: "Personalized photo mugs", icon: "fas fa-mug-hot", products: 28, price: "₹299" },
+          { name: "Greeting Card", desc: "Beautiful greeting cards", icon: "fas fa-envelope", products: 15, price: "₹99" },
+          { name: "Gift Combo", desc: "Special gift combinations", icon: "fas fa-box", products: 12, price: "₹599" },
+          { name: "Personalized", desc: "Customized gift items", icon: "fas fa-user-edit", products: 34, price: "₹399" }
+        ]
+      }
+    };
+
+    // Demo products data
+    const productsData = {
+      "Men's T-Shirts": [
+        { name: "Classic Cotton T-Shirt", price: 299, img: "https://cdn-icons-png.flaticon.com/512/3135/3135706.png" },
+        { name: "Polo T-Shirt", price: 399, img: "https://cdn-icons-png.flaticon.com/512/3135/3135706.png" },
+        { name: "Graphic T-Shirt", price: 249, img: "https://cdn-icons-png.flaticon.com/512/3135/3135706.png" }
+      ],
+      "Women's Dresses": [
+        { name: "Summer Dress", price: 599, img: "https://cdn-icons-png.flaticon.com/512/3135/3135706.png" },
+        { name: "Evening Dress", price: 899, img: "https://cdn-icons-png.flaticon.com/512/3135/3135706.png" },
+        { name: "Casual Dress", price: 449, img: "https://cdn-icons-png.flaticon.com/512/3135/3135706.png" }
+      ],
+      "Mobile": [
+        { name: "Android Smartphone", price: 15999, img: "https://cdn-icons-png.flaticon.com/512/833/833472.png" },
+        { name: "iOS Smartphone", price: 69999, img: "https://cdn-icons-png.flaticon.com/512/833/833472.png" },
+        { name: "Budget Phone", price: 8999, img: "https://cdn-icons-png.flaticon.com/512/833/833472.png" }
+      ]
+    };
+
+    function getCategoryFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('category') || 'fashion';
+    }
+
+    function renderSubcategories() {
+      const category = getCategoryFromURL();
+      const categoryData = subcategoryData[category];
+      
+      if (!categoryData) {
+        document.getElementById('subcategoriesGrid').innerHTML = '<p>Category not found</p>';
+        return;
+      }
+
+      // Update header
+      document.getElementById('categoryTitle').textContent = categoryData.name;
+      document.getElementById('categoryDesc').textContent = categoryData.desc;
+
+      // Render subcategories
+      const grid = document.getElementById('subcategoriesGrid');
+      grid.innerHTML = categoryData.subcategories.map(sub => `
+        <div class="subcategory-card" onclick="showProducts('${sub.name}')">
+          <div class="subcategory-icon">
+            <i class="${sub.icon}"></i>
+          </div>
+          <div class="subcategory-name">${sub.name}</div>
+          <div class="subcategory-desc">${sub.desc}</div>
+          <div class="subcategory-stats">
+            <div class="stat-item">
+              <div class="stat-number">${sub.products}</div>
+              <div class="stat-label">Products</div>
+              </div>
+            <div class="stat-item">
+              <div class="stat-number">${sub.price}</div>
+              <div class="stat-label">Starting</div>
+            </div>
+          </div>
+          <div class="subcategory-actions">
+            <button class="btn-subcategory btn-explore" onclick="event.stopPropagation(); showProducts('${sub.name}')">
+              <i class="fas fa-eye"></i> Explore
+            </button>
+            <button class="btn-subcategory btn-view" onclick="event.stopPropagation(); viewSubcategory('${sub.name}')">
+              <i class="fas fa-list"></i> View All
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function showProducts(subcategoryName) {
+      const products = productsData[subcategoryName] || [];
+      const productsSection = document.getElementById('productsSection');
+      const productsGrid = document.getElementById('productsGrid');
+      const selectedSubcategory = document.getElementById('selectedSubcategory');
+
+      selectedSubcategory.textContent = subcategoryName;
+      productsSection.style.display = 'block';
+
+      if (products.length === 0) {
+        productsGrid.innerHTML = '<p>No products available in this subcategory</p>';
+        return;
+      }
+
+      productsGrid.innerHTML = products.map(prod => `
+        <div class="product-card">
+          <img src="${prod.img}" alt="${prod.name}" class="product-img">
+          <div class="product-name">${prod.name}</div>
+          <div class="product-price">₹${prod.price.toLocaleString()}</div>
+          <div class="product-actions">
+            <button class="btn-product btn-add-cart add-to-cart" 
+                    data-name="${prod.name}" 
+                    data-price="${prod.price}" 
+                    data-img="${prod.img}" 
+                    data-desc="Premium ${prod.name}" 
+                    data-category="subcategory">
+            <i class="fas fa-cart-plus"></i> Add to Cart
+          </button>
+            <button class="btn-product btn-wishlist add-to-wishlist" 
+                    data-name="${prod.name}" 
+                    data-price="${prod.price}" 
+                    data-img="${prod.img}" 
+                    data-desc="Premium ${prod.name}" 
+                    data-category="subcategory">
+              <i class="fas fa-heart"></i>
+          </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function viewSubcategory(subcategoryName) {
+      alert(`Viewing all products in ${subcategoryName}`);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      renderSubcategories();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ./Deals99/backend
+    command: gunicorn deals99_backend.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - ./Deals99/backend:/app
+    env_file:
+      - ./Deals99/backend/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+
+  worker:
+    build:
+      context: ./Deals99/backend
+    command: celery -A deals99_backend worker --loglevel=info
+    volumes:
+      - ./Deals99/backend:/app
+    env_file:
+      - ./Deals99/backend/.env
+    depends_on:
+      - redis
+      - db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: deals99
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StorageManager Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .info { background: #d1ecf1; color: #0c5460; }
+  </style>
+</head>
+<body>
+  <h1>StorageManager Test</h1>
+  <div id="results"></div>
+  
+  <script src="script.js"></script>
+  <script>
+    function addResult(message, type = 'info') {
+      const results = document.getElementById('results');
+      const div = document.createElement('div');
+      div.className = `test-result ${type}`;
+      div.textContent = message;
+      results.appendChild(div);
+    }
+
+    // Test StorageManager
+    function testStorageManager() {
+      try {
+        // Test if StorageManager is available
+        if (typeof window.StorageManager === 'undefined') {
+          addResult('❌ StorageManager is not available on window object', 'error');
+          return;
+        }
+
+        addResult('✅ StorageManager is available on window object', 'success');
+
+        // Test set method
+        window.StorageManager.set('test-key', 'test-value');
+        addResult('✅ StorageManager.set() method works', 'success');
+
+        // Test get method
+        const result = window.StorageManager.get('test-key');
+        if (result === 'test-value') {
+          addResult('✅ StorageManager.get() method works', 'success');
+        } else {
+          addResult('❌ StorageManager.get() method failed', 'error');
+        }
+
+        // Test remove method
+        window.StorageManager.remove('test-key');
+        const removedResult = window.StorageManager.get('test-key');
+        if (removedResult.length === 0) {
+          addResult('✅ StorageManager.remove() method works', 'success');
+        } else {
+          addResult('❌ StorageManager.remove() method failed', 'error');
+        }
+
+        // Test with array
+        const testArray = ['item1', 'item2', 'item3'];
+        window.StorageManager.set('test-array', testArray);
+        const arrayResult = window.StorageManager.get('test-array');
+        if (JSON.stringify(arrayResult) === JSON.stringify(testArray)) {
+          addResult('✅ StorageManager works with arrays', 'success');
+        } else {
+          addResult('❌ StorageManager failed with arrays', 'error');
+        }
+
+        // Test with object
+        const testObject = { name: 'test', value: 123 };
+        window.StorageManager.set('test-object', testObject);
+        const objectResult = window.StorageManager.get('test-object');
+        if (JSON.stringify(objectResult) === JSON.stringify(testObject)) {
+          addResult('✅ StorageManager works with objects', 'success');
+        } else {
+          addResult('❌ StorageManager failed with objects', 'error');
+        }
+
+        // Test clear method
+        window.StorageManager.clear();
+        const clearResult = window.StorageManager.get('test-array');
+        if (clearResult.length === 0) {
+          addResult('✅ StorageManager.clear() method works', 'success');
+        } else {
+          addResult('❌ StorageManager.clear() method failed', 'error');
+        }
+
+        addResult('🎉 All StorageManager tests passed!', 'success');
+
+      } catch (error) {
+        addResult(`❌ Error testing StorageManager: ${error.message}`, 'error');
+      }
+    }
+
+    // Test other managers
+    function testOtherManagers() {
+      try {
+        // Test CartManager
+        if (typeof window.CartManager !== 'undefined') {
+          addResult('✅ CartManager is available', 'success');
+        } else {
+          addResult('❌ CartManager is not available', 'error');
+        }
+
+        // Test WishlistManager
+        if (typeof window.WishlistManager !== 'undefined') {
+          addResult('✅ WishlistManager is available', 'success');
+        } else {
+          addResult('❌ WishlistManager is not available', 'error');
+        }
+
+        // Test UserManager
+        if (typeof window.UserManager !== 'undefined') {
+          addResult('✅ UserManager is available', 'success');
+        } else {
+          addResult('❌ UserManager is not available', 'error');
+        }
+
+        // Test ProductManager
+        if (typeof window.ProductManager !== 'undefined') {
+          addResult('✅ ProductManager is available', 'success');
+        } else {
+          addResult('❌ ProductManager is not available', 'error');
+        }
+
+        // Test ModalManager
+        if (typeof window.ModalManager !== 'undefined') {
+          addResult('✅ ModalManager is available', 'success');
+        } else {
+          addResult('❌ ModalManager is not available', 'error');
+        }
+
+        // Test NotificationManager
+        if (typeof window.NotificationManager !== 'undefined') {
+          addResult('✅ NotificationManager is available', 'success');
+        } else {
+          addResult('❌ NotificationManager is not available', 'error');
+        }
+
+        // Test EventHandlers
+        if (typeof window.EventHandlers !== 'undefined') {
+          addResult('✅ EventHandlers is available', 'success');
+        } else {
+          addResult('❌ EventHandlers is not available', 'error');
+        }
+
+        // Test DEALS99_CONFIG
+        if (typeof window.DEALS99_CONFIG !== 'undefined') {
+          addResult('✅ DEALS99_CONFIG is available', 'success');
+        } else {
+          addResult('❌ DEALS99_CONFIG is not available', 'error');
+        }
+
+      } catch (error) {
+        addResult(`❌ Error testing other managers: ${error.message}`, 'error');
+      }
+    }
+
+    // Run tests when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      addResult('🚀 Starting StorageManager tests...', 'info');
+      testStorageManager();
+      addResult('🚀 Starting other manager tests...', 'info');
+      testOtherManagers();
+      addResult('✅ All tests completed!', 'success');
+    });
+  </script>
+</body>
+</html> 

@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categories | Deals99</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="global.css">
+  <style>
+    /* Enhanced Categories Page Styles */
+    body {
+      background: linear-gradient(135deg, #f8f9ff 0%, #ffe6ec 50%, #fff5f7 100%);
+      font-family: 'Inter', Arial, sans-serif;
+      color: #23272f;
+      font-size: 1.1rem;
+      line-height: 1.8;
+      min-height: 100vh;
+      position: relative;
+    }
+    
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      box-shadow: 0 25px 80px rgba(233,30,99,0.15), 0 0 0 1px rgba(255,255,255,0.1);
+      padding: 3rem 2.5rem;
+      animation: slideInUp 0.6s ease;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(45deg, #e91e63, #ff6b9d, #e91e63);
+      border-radius: 24px;
+      z-index: -1;
+      opacity: 0.3;
+      animation: borderGlow 3s ease-in-out infinite;
+    }
+    
+    @keyframes borderGlow {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+    
+    h2 {
+      font-weight: 700;
+      color: #e91e63;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      font-size: 2.2rem;
+      position: relative;
+    }
+    
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, #e91e63, #ff6b9d);
+      border-radius: 2px;
+    }
+    
+    .category-filters {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .filter-btn {
+      padding: 0.75rem 1.5rem;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.9);
+      color: #495057;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    
+    .filter-btn:hover, .filter-btn.active {
+      border-color: #e91e63;
+      background: #e91e63;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(233,30,99,0.3);
+    }
+    
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    
+    .category-card {
+      background: rgba(255,255,255,0.9);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .category-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #e91e63, #ff6b9d);
+    }
+    
+    .category-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+    
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .category-icon {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #e91e63, #ff6b9d);
+      color: white;
+      border-radius: 12px;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 12px rgba(233,30,99,0.3);
+    }
+    
+    .category-info h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1d3557;
+      margin-bottom: 0.25rem;
+    }
+    
+    .category-info p {
+      color: #6c757d;
+      margin: 0;
+      font-size: 0.9rem;
+    }
+    
+    .category-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .stat-item {
+      text-align: center;
+      padding: 1rem;
+      background: rgba(248,249,250,0.8);
+      border-radius: 8px;
+      border: 1px solid #e9ecef;
+    }
+    
+    .stat-number {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #e91e63;
+      margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
+    
+    .subcategories {
+      margin-bottom: 1.5rem;
+    }
+    
+    .subcategory-tag {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: rgba(233,30,99,0.1);
+      color: #e91e63;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin: 0.25rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .subcategory-tag:hover {
+      background: #e91e63;
+      color: white;
+      transform: scale(1.05);
+    }
+    
+    .category-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .btn-category {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex: 1;
+      justify-content: center;
+    }
+    
+    .btn-explore {
+      background: linear-gradient(135deg, #e91e63 0%, #ff6b9d 100%);
+      color: white;
+    }
+    
+    .btn-explore:hover {
+      background: linear-gradient(135deg, #d81b60 0%, #e91e63 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(233,30,99,0.3);
+      color: white;
+    }
+    
+    .btn-view {
+      background: rgba(255,255,255,0.9);
+      color: #495057;
+      border: 2px solid #e9ecef;
+    }
+    
+    .btn-view:hover {
+      border-color: #e91e63;
+      color: #e91e63;
+      transform: translateY(-2px);
+    }
+    
+    .featured-products {
+      margin-top: 3rem;
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #1d3557;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .product-card {
+      background: rgba(255,255,255,0.9);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    
+    .product-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    
+    .product-img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      border: 2px solid #f0f0f0;
+    }
+    
+    .product-name {
+      font-weight: 600;
+      color: #1d3557;
+      margin-bottom: 0.5rem;
+    }
+    
+    .product-price {
+      color: #e91e63;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .product-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    
+    .btn-product {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-add-cart {
+      background: #27ae60;
+      color: white;
+    }
+    
+    .btn-add-cart:hover {
+      background: #2ecc71;
+      transform: scale(1.05);
+    }
+    
+    .btn-wishlist {
+      background: #e74c3c;
+      color: white;
+    }
+    
+    .btn-wishlist:hover {
+      background: #c0392b;
+      transform: scale(1.05);
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .floating-shapes {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+    
+    .shape {
+      position: absolute;
+      opacity: 0.1;
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .shape:nth-child(1) {
+      top: 20%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+    
+    .shape:nth-child(2) {
+      top: 60%;
+      right: 10%;
+      animation-delay: 2s;
+    }
+    
+    .shape:nth-child(3) {
+      bottom: 20%;
+      left: 20%;
+      animation-delay: 4s;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+    }
+    
+    .back-to-home {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e91e63;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+    
+    .back-to-home:hover {
+      background: #e91e63;
+      color: white;
+      transform: scale(1.1);
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px auto;
+        padding: 2rem 1.5rem;
+        max-width: 95%;
+      }
+      
+      .category-filters {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .categories-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .category-stats {
+        grid-template-columns: 1fr;
+      }
+      
+      .category-actions {
+        flex-direction: column;
+      }
+      
+      .back-to-home {
+      top: 10px;
+        left: 10px;
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Floating Background Shapes -->
+  <div class="floating-shapes">
+    <div class="shape" style="width: 60px; height: 60px; background: #e91e63; border-radius: 50%;"></div>
+    <div class="shape" style="width: 40px; height: 40px; background: #ff6b9d; border-radius: 8px;"></div>
+    <div class="shape" style="width: 80px; height: 40px; background: #ffd166; border-radius: 20px;"></div>
+  </div>
+
+  <!-- Back to Home Button -->
+  <button class="back-to-home" onclick="window.location.href='index.html'" title="Back to Home">
+    <i class="fas fa-home"></i>
+  </button>
+
+  <div class="container">
+    <h2><i class="fas fa-th-large"></i> Shop by Categories</h2>
+    
+    <div class="category-filters">
+      <button class="filter-btn active" data-filter="all">All Categories</button>
+      <button class="filter-btn" data-filter="fashion">Fashion</button>
+      <button class="filter-btn" data-filter="electronics">Electronics</button>
+      <button class="filter-btn" data-filter="gifts">Gifts</button>
+      <button class="filter-btn" data-filter="home">Home & Living</button>
+      <button class="filter-btn" data-filter="deals">Deals @ 99</button>
+    </div>
+    
+    <div class="categories-grid" id="categoriesGrid">
+      <!-- Categories will be loaded here -->
+    </div>
+    
+    <div class="featured-products" id="featuredProducts">
+      <!-- Featured products will be loaded here -->
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
+  <script>
+    // Enhanced Categories Management
+    class CategoriesManager {
+      constructor() {
+        this.categories = [];
+        this.currentFilter = 'all';
+        this.loadCategories();
+        this.initializeEventListeners();
+        this.renderCategories();
+        this.loadFeaturedProducts();
+      }
+      
+      loadCategories() {
+        this.categories = [
+          {
+            id: 'fashion',
+            name: 'Fashion',
+            description: 'Men & Women Clothing',
+            icon: 'fas fa-tshirt',
+            color: '#e91e63',
+            products: 156,
+            subcategories: 8,
+            subcategoriesList: ["Men's T-Shirts", "Women's Dresses", "Kids Wear", "Jeans", "Jackets", "Shoes", "Accessories", "Watches"],
+            featured: true
+          },
+          {
+            id: 'electronics',
+            name: 'Electronics',
+            description: 'Mobiles, Laptops, Gadgets',
+            icon: 'fas fa-laptop',
+            color: '#1d3557',
+            products: 89,
+            subcategories: 6,
+            subcategoriesList: ["Mobile", "Laptop", "Earphones", "Speakers", "Accessories", "Smartwatches"],
+            featured: true
+          },
+          {
+            id: 'keychains',
+            name: 'Keychains',
+            description: 'Customized Keychains',
+            icon: 'fas fa-key',
+            color: '#fca311',
+            products: 45,
+            subcategories: 4,
+            subcategoriesList: ["Photo Keychain", "Name Keychain", "LED Keychain", "Metal Keychain"],
+            featured: false
+          },
+          {
+            id: 'cups',
+            name: 'Cups',
+            description: 'Printed Coffee Mugs',
+            icon: 'fas fa-mug-hot',
+            color: '#ffb6c1',
+            products: 67,
+            subcategories: 3,
+            subcategoriesList: ["Coffee Mugs", "Travel Mugs", "Printed Mugs"],
+            featured: false
+          },
+          {
+            id: 'gift-items',
+            name: 'Gift Items',
+            description: 'Birthday & Anniversary',
+            icon: 'fas fa-gift',
+            color: '#e91e63',
+            products: 78,
+            subcategories: 4,
+            subcategoriesList: ["Photo Mug", "Greeting Card", "Gift Combo", "Personalized"],
+            featured: true
+          },
+          {
+            id: 'deals99',
+            name: 'Deals @ 99',
+            description: 'Everything under ₹99',
+            icon: 'fas fa-tag',
+            color: '#27ae60',
+            products: 234,
+            subcategories: 4,
+            subcategoriesList: ["Stationery", "Home", "Office", "Misc"],
+            featured: true
+          },
+          {
+            id: 'home-decor',
+            name: 'Home Decor',
+            description: 'Furniture & Lighting',
+            icon: 'fas fa-couch',
+            color: '#a084e8',
+            products: 92,
+            subcategories: 4,
+            subcategoriesList: ["Furniture", "Lighting", "Wall Art", "Decor Items"],
+            featured: false
+          },
+          {
+            id: 'personal-care',
+            name: 'Personal Care',
+            description: 'Beauty & Wellness',
+            icon: 'fas fa-heartbeat',
+            color: '#ff3e6c',
+            products: 56,
+            subcategories: 4,
+            subcategoriesList: ["Beauty", "Wellness", "Grooming", "Health"],
+            featured: false
+          }
+        ];
+      }
+      
+      getFilteredCategories() {
+        if (this.currentFilter === 'all') return this.categories;
+        return this.categories.filter(category => category.id.includes(this.currentFilter));
+      }
+      
+      renderCategories() {
+        const grid = document.getElementById('categoriesGrid');
+        const filteredCategories = this.getFilteredCategories();
+        
+        let categoriesHTML = '';
+        filteredCategories.forEach(category => {
+          categoriesHTML += `
+            <div class="category-card" onclick="categoriesManager.exploreCategory('${category.id}')">
+              <div class="category-header">
+                <div class="category-icon" style="background: ${category.color}">
+                  <i class="${category.icon}"></i>
+                </div>
+                <div class="category-info">
+                  <h3>${category.name}</h3>
+                  <p>${category.description}</p>
+                </div>
+              </div>
+              
+              <div class="category-stats">
+                <div class="stat-item">
+                  <div class="stat-number">${category.products}</div>
+                  <div class="stat-label">Products</div>
+          </div>
+                <div class="stat-item">
+                  <div class="stat-number">${category.subcategories}</div>
+                  <div class="stat-label">Subcategories</div>
+          </div>
+          </div>
+              
+              <div class="subcategories">
+                ${category.subcategoriesList.slice(0, 4).map(sub => 
+                  `<span class="subcategory-tag">${sub}</span>`
+                ).join('')}
+                ${category.subcategoriesList.length > 4 ? 
+                  `<span class="subcategory-tag">+${category.subcategoriesList.length - 4} more</span>` : ''
+                }
+          </div>
+              
+              <div class="category-actions">
+                <button class="btn-category btn-explore" onclick="event.stopPropagation(); categoriesManager.exploreCategory('${category.id}')">
+                  <i class="fas fa-shopping-bag"></i> Explore
+            </button>
+                <button class="btn-category btn-view" onclick="event.stopPropagation(); categoriesManager.viewSubcategories('${category.id}')">
+                  <i class="fas fa-list"></i> View All
+            </button>
+          </div>
+        </div>
+          `;
+        });
+        
+        grid.innerHTML = categoriesHTML;
+      }
+      
+      loadFeaturedProducts() {
+        const featuredProducts = [
+          {
+            name: 'Wireless Headphones',
+            price: '₹1,299',
+            img: 'https://cdn-icons-png.flaticon.com/512/1048/1048927.png',
+            category: 'electronics'
+          },
+          {
+            name: 'Custom T-Shirt',
+            price: '₹599',
+            img: 'https://cdn-icons-png.flaticon.com/512/3135/3135706.png',
+            category: 'fashion'
+          },
+          {
+            name: 'Photo Mug',
+            price: '₹299',
+            img: 'https://cdn-icons-png.flaticon.com/512/3050/3050173.png',
+            category: 'gift-items'
+          },
+          {
+            name: 'Smart Watch',
+            price: '₹2,499',
+            img: 'https://cdn-icons-png.flaticon.com/512/3134/3134810.png',
+            category: 'electronics'
+          }
+        ];
+        
+        const container = document.getElementById('featuredProducts');
+        container.innerHTML = `
+          <div class="section-title">
+            <i class="fas fa-star"></i> Featured Products
+        </div>
+          <div class="products-grid">
+            ${featuredProducts.map(product => `
+              <div class="product-card">
+                <img src="${product.img}" alt="${product.name}" class="product-img">
+                <div class="product-name">${product.name}</div>
+                <div class="product-price">${product.price}</div>
+                <div class="product-actions">
+                  <button class="btn-product btn-add-cart add-to-cart" 
+                          data-name="${product.name}" 
+                          data-price="1299" 
+                          data-img="${product.img}" 
+                          data-desc="Premium ${product.name}" 
+                          data-category="${product.category}">
+                    <i class="fas fa-cart-plus"></i> Add to Cart
+                  </button>
+                  <button class="btn-product btn-wishlist add-to-wishlist" 
+                          data-name="${product.name}" 
+                          data-price="1299" 
+                          data-img="${product.img}" 
+                          data-desc="Premium ${product.name}" 
+                          data-category="${product.category}">
+                    <i class="fas fa-heart"></i>
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+      
+      exploreCategory(categoryId) {
+        const category = this.categories.find(c => c.id === categoryId);
+        if (category) {
+          alert(`Exploring ${category.name} category with ${category.products} products`);
+          // In a real app, this would navigate to the category page
+          window.location.href = `subcategory.html?category=${categoryId}`;
+        }
+      }
+      
+      viewSubcategories(categoryId) {
+        const category = this.categories.find(c => c.id === categoryId);
+        if (category) {
+          const subcategories = category.subcategoriesList.join('\n• ');
+          alert(`${category.name} Subcategories:\n• ${subcategories}`);
+        }
+      }
+      
+      addToCart(productName) {
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        cart.push({ name: productName, qty: 1, addedAt: new Date().toISOString() });
+        localStorage.setItem('cart', JSON.stringify(cart));
+        alert(`"${productName}" added to cart!`);
+      }
+      
+      addToWishlist(productName) {
+        let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        if (!wishlist.find(item => item.name === productName)) {
+          wishlist.push({ name: productName, addedAt: new Date().toISOString() });
+          localStorage.setItem('wishlist', JSON.stringify(wishlist));
+          alert(`"${productName}" added to wishlist!`);
+        } else {
+          alert(`"${productName}" is already in your wishlist!`);
+        }
+      }
+      
+      initializeEventListeners() {
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            this.currentFilter = e.target.dataset.filter;
+            this.renderCategories();
+          });
+        });
+      }
+    }
+    
+    // Initialize categories manager
+    let categoriesManager;
+    document.addEventListener('DOMContentLoaded', () => {
+      categoriesManager = new CategoriesManager();
+    });
+  </script>
+</body>
+</html>
