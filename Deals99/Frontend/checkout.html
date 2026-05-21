@@ -700,6 +700,22 @@
               }
             }
             this.showToast(`Order placed! ${order.order_number || order.id}${paymentNote}`, 'success');
+            const pendingRaw = sessionStorage.getItem('deals99_pending_payment');
+            if (pendingRaw && (apiPaymentMethod === 'stripe' || apiPaymentMethod === 'razorpay')) {
+              try {
+                const { completePendingPayment } = await import('./pages/payment-ui.js');
+                const pending = JSON.parse(pendingRaw);
+                const opened = await completePendingPayment(pending, order);
+                if (opened) {
+                  setTimeout(() => {
+                    window.location.href = `order.html?orderId=${order.order_number || order.id}`;
+                  }, 2000);
+                  return;
+                }
+              } catch (payUiErr) {
+                console.warn('Checkout payment UI', payUiErr);
+              }
+            }
             setTimeout(() => {
               window.location.href = `order.html?orderId=${order.order_number || order.id}`;
             }, 1500);

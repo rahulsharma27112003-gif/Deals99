@@ -2,6 +2,7 @@
  * Orders page — loads order history from /api/orders/ and supports ?orderId= deep link.
  */
 import { fetchOrders, fetchOrder, isAuthenticated, logoutUser, getCurrentUser } from '../api.js';
+import { completePendingPayment } from './payment-ui.js';
 
 function formatMoney(amount) {
   return `₹${Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -109,18 +110,26 @@ class OrderManager {
       }
       const container = document.getElementById('orderDetails');
       if (!container) return;
-      let msg = '';
-      if (pending.client_secret) {
-        msg = `<div class="alert alert-warning small mt-2">
-          <strong>Stripe payment pending.</strong> Payment intent <code>${pending.payment_intent_id || ''}</code> was created.
-          Integrate Stripe.js with client secret to complete payment.
-        </div>`;
-      } else if (pending.razorpay_order_id) {
-        msg = `<div class="alert alert-warning small mt-2">
-          <strong>Razorpay payment pending.</strong> Order id: <code>${pending.razorpay_order_id}</code>
-        </div>`;
-      }
-      if (msg) container.insertAdjacentHTML('afterbegin', msg);
+      const payBtnId = 'orderPayNowBtn';
+      let msg = `<div class="alert alert-warning small">
+        <strong>Payment pending.</strong> Complete online payment for this order.
+        <button type="button" class="btn btn-sm btn-primary ms-2" id="${payBtnId}">Pay now</button>
+      </div>`;
+      container.insertAdjacentHTML('afterbegin', msg);
+      document.getElementById(payBtnId)?.addEventListener('click', async () => {
+        try {
+          const ok = await completePendingPayment(pending, order);
+          if (!ok) {
+            this.showToast('Payment provider not configured on server', 'warning');
+          } else {
+            await this.loadOrdersFromBackend();
+            this.renderOrders();
+            this.viewOrder(order.id);
+          }
+        } catch (err) {
+          this.showToast(err.message || 'Payment failed', 'error');
+        }
+      });
     } catch (e) {
       console.warn('order-page: pending payment banner', e);
     }

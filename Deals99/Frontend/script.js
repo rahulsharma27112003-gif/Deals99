@@ -1007,24 +1007,30 @@ class ProductManager {
     const container = document.getElementById(containerId);
     if (!container || !products.length) return;
 
-    // Plain text rendering for products with stock/availability
-    const productsText = products.slice(0, 4).map(product => {
-      let text = 'Product: ' + product.name + '\n';
-      text += 'Price: Rs.' + (product.price || product.discounted) + '\n';
-      if (product.mrp && (product.mrp > (product.price || product.discounted))) {
-        text += 'MRP: Rs.' + product.mrp + '\n';
+    const mapped = products.slice(0, 8).map((p) => {
+      if (p.id && ProductManager.mapApiProduct) {
+        return ProductManager.mapApiProduct(p);
       }
-      text += 'Category: ' + (product.category_name || product.category || 'General') + '\n';
-      // Stock/availability indicator
-      if (typeof product.stock === 'number') {
-        text += 'Availability: ' + (product.stock > 0 ? 'In Stock (' + product.stock + ')' : 'Out of Stock') + '\n';
-      } else {
-        text += 'Availability: Unknown\n';
-      }
-      text += '---';
-      return text;
-    }).join('\n');
-    container.textContent = productsText;
+      const price = parseFloat(p.price || p.discounted) || 0;
+      return {
+        id: p.id,
+        name: p.name,
+        price,
+        mrp: parseFloat(p.mrp) || price,
+        img: p.img || p.primary_image || 'https://via.placeholder.com/100?text=Deal',
+        desc: p.desc || p.description || '',
+        category: p.category_name || p.category || 'General',
+        stock: typeof p.stock === 'number' ? p.stock : 1,
+        badge: 'Deal',
+      };
+    });
+
+    container.innerHTML = mapped
+      .map((product) => {
+        const card = ProductManager.renderProductCard(product);
+        return `<div class="product-card-wrap">${card}</div>`;
+      })
+      .join('');
   }
 
   setupEventListeners() {

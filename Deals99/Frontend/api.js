@@ -408,6 +408,10 @@ export async function createPaymentIntent(orderId, paymentMethod = 'stripe') {
   );
 }
 
+export async function fetchPaymentConfig() {
+  return unwrapObject(await apiRequest('/payments/config/'));
+}
+
 export async function verifyPayment(paymentId, paymentMethod = 'stripe') {
   return unwrapObject(
     await apiRequest('/payments/verify/', {

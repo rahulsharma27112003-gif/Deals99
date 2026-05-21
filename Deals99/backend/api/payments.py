@@ -100,7 +100,7 @@ class StripePaymentProcessor:
             # Create payment intent
             intent = stripe.PaymentIntent.create(
                 amount=amount_cents,
-                currency='usd',
+                currency='inr',
                 metadata={
                     'order_id': order.id,
                     'order_number': order.order_number,
@@ -116,7 +116,7 @@ class StripePaymentProcessor:
                 'client_secret': intent.client_secret,
                 'payment_intent_id': intent.id,
                 'amount': float(order.total_amount),
-                'currency': 'usd'
+                'currency': 'inr'
             }
 
         except stripe.error.StripeError as e:

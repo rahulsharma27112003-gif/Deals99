@@ -211,8 +211,12 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-# Payment webhook secrets (configure in production environment)
+# Payments (configure in production environment)
+STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY', default='')
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
 STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
+RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
+RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
 RAZORPAY_WEBHOOK_SECRET = config('RAZORPAY_WEBHOOK_SECRET', default='')
 
 # Account lockout / security defaults

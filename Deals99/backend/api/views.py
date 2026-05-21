@@ -627,19 +627,57 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get', 'patch'])
     def me(self, request):
-        """Get or update current user profile"""
-        profile, created = UserProfile.objects.get_or_create(user=request.user)
-        
+        """Get or update current user profile (merged with User account fields)."""
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+        def profile_payload():
+            data = UserProfileSerializer(profile).data
+            user = request.user
+            data.update({
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'username': user.username,
+            })
+            return data
+
         if request.method == 'GET':
-            serializer = UserProfileSerializer(profile)
-            return Response(serializer.data)
-        
-        elif request.method == 'PATCH':
-            serializer = UserProfileSerializer(profile, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(profile_payload())
+
+        data = request.data.copy()
+        if 'birth_date' in data and 'date_of_birth' not in data:
+            data['date_of_birth'] = data.pop('birth_date')
+
+        user = request.user
+        user_updated = False
+        for field in ('first_name', 'last_name', 'email'):
+            if field in data:
+                setattr(user, field, data.pop(field))
+                user_updated = True
+        if user_updated:
+            user.save(update_fields=['first_name', 'last_name', 'email'])
+
+        serializer = UserProfileSerializer(profile, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(profile_payload())
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentConfigView(APIView):
+    """Public payment provider configuration for client-side checkout."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        return Response({
+            'stripe_publishable_key': getattr(settings, 'STRIPE_PUBLIC_KEY', '') or '',
+            'razorpay_key_id': getattr(settings, 'RAZORPAY_KEY_ID', '') or '',
+            'stripe_enabled': bool(getattr(settings, 'STRIPE_SECRET_KEY', '')),
+            'razorpay_enabled': bool(
+                getattr(settings, 'RAZORPAY_KEY_ID', '') and getattr(settings, 'RAZORPAY_KEY_SECRET', '')
+            ),
+        })
 
 
 class PaymentCreateIntentView(APIView):
