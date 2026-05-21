@@ -10,7 +10,7 @@ import {
 } from './api.js';
 
 // ===== GLOBAL CONFIGURATION =====
-const CONFIG = {
+export const CONFIG = {
   STORAGE_KEYS: {
     CART: 'cart',
     WISHLIST: 'wishlist',
@@ -145,6 +145,7 @@ class CartManager {
         StorageManager.set(CONFIG.STORAGE_KEYS.CART, this.items);
       }
       this.updateCartCount();
+      this.notifyCartUpdated();
       NotificationManager.show(`Added to cart: ${product.name}`, 'success');
       return true;
     } catch (error) {
@@ -176,6 +177,7 @@ class CartManager {
         }
       }
       this.updateCartCount();
+      this.notifyCartUpdated();
       return true;
     } catch (error) {
       console.error('CartManager: Error updating quantity:', error);
@@ -200,6 +202,7 @@ class CartManager {
         StorageManager.set(CONFIG.STORAGE_KEYS.CART, this.items);
       }
       this.updateCartCount();
+      this.notifyCartUpdated();
       NotificationManager.show('Item removed from cart', 'info');
       return true;
     } catch (error) {
@@ -210,6 +213,38 @@ class CartManager {
 
   getCartCount() {
     return this.items.reduce((sum, item) => sum + (item.qty || item.quantity || 1), 0);
+  }
+
+  getCartTotal() {
+    return this.items.reduce((sum, item) => {
+      const price = parseFloat(item.price || item.discounted || item.mrp || 0);
+      const qty = item.qty || item.quantity || 1;
+      return sum + price * qty;
+    }, 0);
+  }
+
+  async clearCart() {
+    try {
+      if (isAuthenticated()) {
+        await clearCart();
+        await this.loadCartFromBackend();
+      } else {
+        this.items = [];
+        StorageManager.set(CONFIG.STORAGE_KEYS.CART, this.items);
+      }
+      this.updateCartCount();
+      this.notifyCartUpdated();
+      NotificationManager.show('Cart cleared', 'info');
+      return true;
+    } catch (error) {
+      console.error('CartManager: Error clearing cart:', error);
+      NotificationManager.show('Failed to clear cart', 'error');
+      return false;
+    }
+  }
+
+  notifyCartUpdated() {
+    document.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: this.items } }));
   }
 
   updateCartCount() {
@@ -235,19 +270,23 @@ class CartManager {
 
   getProductFromButton(button) {
     try {
+      const productId = button.getAttribute('data-product-id');
       const productName = button.getAttribute('data-name') || button.querySelector('.product-name')?.textContent;
       const productPrice = button.getAttribute('data-price') || button.querySelector('.product-price')?.textContent;
       const productImg = button.getAttribute('data-img') || button.querySelector('.product-img')?.src;
       const productDesc = button.getAttribute('data-desc') || button.querySelector('.product-desc')?.textContent;
       const productCategory = button.getAttribute('data-category') || 'General';
 
-      if (productName) {
+      if (productId || productName) {
+        const id = productId ? parseInt(productId, 10) : undefined;
         return {
+          id,
+          product_id: id,
           name: productName,
-          price: parseFloat(productPrice?.replace(/[^\d.]/g, '')) || 0,
+          price: parseFloat(String(productPrice).replace(/[^\d.]/g, '')) || 0,
           img: productImg,
           desc: productDesc,
-          category: productCategory
+          category: productCategory,
         };
       }
       return null;
@@ -987,38 +1026,113 @@ class ProductManager {
   }
 
   getProductFromButton(button) {
-    try {
-      const productName = button.getAttribute('data-name') || button.querySelector('.product-name')?.textContent;
-      const productPrice = button.getAttribute('data-price') || button.querySelector('.product-price')?.textContent;
-      const productImg = button.getAttribute('data-img') || button.querySelector('.product-img')?.src;
-      const productDesc = button.getAttribute('data-desc') || button.querySelector('.product-desc')?.textContent;
-      const productCategory = button.getAttribute('data-category') || 'General';
-
-      if (productName) {
-        return {
-          name: productName,
-          price: parseFloat(productPrice?.replace(/[^\d.]/g, '')) || 0,
-          img: productImg,
-          desc: productDesc,
-          category: productCategory
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('ProductManager: Error getting product data:', error);
-      return null;
+    if (window.cartManager?.getProductFromButton) {
+      return window.cartManager.getProductFromButton(button);
     }
+    return null;
   }
 
   showQuickView(product) {
-    // Plain text quick view
-    alert('Product: ' + product.name + '\n' +
+    alert(
+      'Product: ' + product.name + '\n' +
       'Price: Rs.' + (product.price || product.discounted || product.mrp) + '\n' +
-      'Description: ' + (product.desc || '') + '\n' +
-      (product.mrp && product.mrp > (product.price || product.discounted) ? 'MRP: Rs.' + product.mrp + '\n' : '')
+      'Description: ' + (product.desc || product.description || '') + '\n' +
+      (product.mrp && product.mrp > (product.price || product.discounted) ? 'MRP: Rs.' + product.mrp + '\n' : '') +
+      (typeof product.stock === 'number' ? 'Stock: ' + product.stock : '')
     );
   }
+
+  searchProducts(query) {
+    const products = StorageManager.get(CONFIG.STORAGE_KEYS.LIVE_PRODUCTS) || [];
+    const q = (query || '').toLowerCase().trim();
+    if (!q) return products;
+    return products.filter((p) => {
+      const name = (p.name || '').toLowerCase();
+      const desc = (p.description || p.desc || '').toLowerCase();
+      const cat = (p.category_name || p.category || '').toLowerCase();
+      return name.includes(q) || desc.includes(q) || cat.includes(q);
+    });
+  }
+
+  static mapApiProduct(p) {
+    const price = parseFloat(p.price) || 0;
+    const mrp = parseFloat(p.mrp) || price;
+    const categorySlug = (p.category_name || '').toLowerCase().replace(/\s+/g, '-');
+    return {
+      id: p.id,
+      product_id: p.id,
+      name: p.name,
+      desc: p.description || '',
+      description: p.description || '',
+      price,
+      original: mrp > price ? mrp : null,
+      mrp,
+      category: categorySlug,
+      category_name: p.category_name,
+      img: p.primary_image || 'https://via.placeholder.com/100?text=Product',
+      badge: p.featured ? 'Featured' : (p.discount_percentage > 0 ? `${Math.round(p.discount_percentage)}% OFF` : 'Deal'),
+      stock: typeof p.stock === 'number' ? p.stock : 0,
+      featured: p.featured,
+      created_at: p.created_at,
+    };
+  }
+
+  static renderProductCard(product) {
+    const outOfStock = typeof product.stock === 'number' && product.stock <= 0;
+    const stockHtml =
+      typeof product.stock === 'number'
+        ? product.stock > 0
+          ? `<span class="badge bg-success">In Stock (${product.stock})</span>`
+          : `<span class="badge bg-danger">Out of Stock</span>`
+        : '';
+    const originalHtml = product.original
+      ? `<div class="product-original">₹${Number(product.original).toLocaleString('en-IN')}</div>`
+      : '';
+    return `
+      <div class="product-card">
+        <div class="product-badge">${product.badge || 'Deal'}</div>
+        <img src="${product.img}" alt="${product.name}" class="product-img" loading="lazy">
+        <div class="product-name">${product.name}</div>
+        <div class="product-desc">${product.desc || product.description || ''}</div>
+        <div class="product-price">₹${Number(product.price).toLocaleString('en-IN')}</div>
+        ${originalHtml}
+        <div class="product-category">${product.category_name || product.category || 'General'}</div>
+        <div class="product-stock">${stockHtml}</div>
+        <div class="product-actions">
+          <button class="btn-product btn-cart add-to-cart"
+                  data-product-id="${product.id}"
+                  data-name="${product.name}"
+                  data-price="${product.price}"
+                  data-img="${product.img}"
+                  data-desc="${product.desc || ''}"
+                  data-category="${product.category_name || product.category || ''}"
+                  ${outOfStock ? 'disabled title="Out of stock"' : ''}>
+            <i class="fas fa-cart-plus"></i> Cart
+          </button>
+          <button class="btn-product btn-wishlist add-to-wishlist"
+                  data-product-id="${product.id}"
+                  data-name="${product.name}"
+                  data-price="${product.price}"
+                  data-img="${product.img}"
+                  data-desc="${product.desc || ''}"
+                  data-category="${product.category_name || product.category || ''}">
+            <i class="fas fa-heart"></i>
+          </button>
+          <button class="btn-product btn-view quick-view"
+                  data-product-id="${product.id}"
+                  data-name="${product.name}"
+                  data-price="${product.price}"
+                  data-img="${product.img}"
+                  data-desc="${product.desc || ''}"
+                  data-category="${product.category_name || product.category || ''}">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>`;
+  }
 }
+
+window.ProductManager = ProductManager;
 
 // ===== MODAL MANAGER =====
 class ModalManager {
@@ -1375,6 +1489,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.StorageManager = StorageManager;
     window.NotificationManager = NotificationManager;
     window.ModalManager = ModalManager;
+    window.CONFIG = CONFIG;
 
     // Ensure core managers exist for pages that import `script.js` as a module
     // (idempotent — will not re-create an already initialized manager)

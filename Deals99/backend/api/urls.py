@@ -7,6 +7,8 @@ from .views import (
     ProductViewSet, CartViewSet, WishlistViewSet, OrderViewSet,
     ReviewViewSet, BannerViewSet, UserProfileViewSet,     DashboardView,
     HealthCheckView,
+    PaymentCreateIntentView,
+    PaymentVerifyView,
 )
 from .webhooks import StripeWebhookView, RazorpayWebhookView
 
@@ -31,6 +33,8 @@ urlpatterns = [
     path('auth/csrf/', GetCSRFTokenView.as_view(), name='get_csrf_token'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
 
+    path('payments/create-intent/', PaymentCreateIntentView.as_view(), name='payment_create_intent'),
+    path('payments/verify/', PaymentVerifyView.as_view(), name='payment_verify'),
     # Payment webhook endpoints (verify signatures; create PaymentAudit entries)
     path('payments/stripe-webhook/', StripeWebhookView.as_view(), name='stripe_webhook'),
     path('payments/razorpay-webhook/', RazorpayWebhookView.as_view(), name='razorpay_webhook'),

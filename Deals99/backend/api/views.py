@@ -23,6 +23,7 @@ from .models import (
     Wishlist,
     Order,
     OrderItem,
+    Payment,
     Review,
     Banner,
 )
@@ -44,6 +45,7 @@ from .serializers import (
 from .permissions import IsAdminOrManager, IsStaffOrAbove
 from .services.orders import create_order_from_cart, EmptyCartError, update_order_status
 from .services.dashboard import get_overview_statistics
+from .payments import PaymentProcessor
 
 
 class AuthView(APIView):
@@ -638,6 +640,87 @@ class UserProfileViewSet(viewsets.ModelViewSet):
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentCreateIntentView(APIView):
+    """Create a Stripe PaymentIntent or Razorpay order for an existing order."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        order_id = request.data.get('order_id')
+        payment_method = request.data.get('payment_method', 'stripe')
+        if not order_id:
+            return Response({'error': 'order_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            order = Order.objects.get(pk=order_id, user=request.user)
+        except Order.DoesNotExist:
+            return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if payment_method not in ('stripe', 'razorpay'):
+            return Response(
+                {'error': 'payment_method must be stripe or razorpay'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        result = PaymentProcessor.create_payment_intent(order, payment_method)
+        if not result.get('success'):
+            return Response(
+                {'success': False, 'error': result.get('error', 'Payment setup failed')},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        payment_id = result.get('payment_intent_id') or result.get('razorpay_order_id')
+        currency = (result.get('currency') or ('INR' if payment_method == 'razorpay' else 'USD')).upper()
+        Payment.objects.update_or_create(
+            payment_id=payment_id,
+            defaults={
+                'order': order,
+                'payment_method': payment_method,
+                'amount': order.total_amount,
+                'currency': currency,
+                'status': 'pending',
+                'response_data': {k: v for k, v in result.items() if k != 'success'},
+            },
+        )
+
+        payload = {k: v for k, v in result.items() if k != 'success'}
+        payload['success'] = True
+        payload['order_id'] = order.id
+        payload['order_number'] = order.order_number
+        return Response(payload, status=status.HTTP_201_CREATED)
+
+
+class PaymentVerifyView(APIView):
+    """Verify an online payment after client-side completion."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        payment_id = request.data.get('payment_id')
+        payment_method = request.data.get('payment_method', 'stripe')
+        if not payment_id:
+            return Response({'error': 'payment_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if payment_method not in ('stripe', 'razorpay'):
+            return Response(
+                {'error': 'payment_method must be stripe or razorpay'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        result = PaymentProcessor.verify_payment(payment_id, payment_method)
+        payment = Payment.objects.filter(payment_id=payment_id, order__user=request.user).first()
+        if payment and result.get('success'):
+            new_status = result.get('status', 'completed')
+            if new_status == 'completed':
+                payment.mark_as_completed()
+                payment.order.payment_status = 'completed'
+                payment.order.save(update_fields=['payment_status', 'updated_at'])
+            elif new_status == 'processing':
+                payment.status = 'processing'
+                payment.save(update_fields=['status', 'updated_at'])
+
+        if not result.get('success'):
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        return Response(result)
 
 
 class HealthCheckView(APIView):

@@ -617,14 +617,30 @@
         ].filter(Boolean).join(', ');
 
         try {
-          const { createOrder, isAuthenticated } = await import('./api.js');
+          const { createOrder, createPaymentIntent, isAuthenticated } = await import('./api.js');
           if (isAuthenticated()) {
+            const apiPaymentMethod =
+              paymentMethod === 'card' ? 'stripe' : paymentMethod === 'upi' ? 'razorpay' : 'cod';
             const order = await createOrder({
               shipping_address,
-              payment_method: paymentMethod === 'card' ? 'stripe' : 'cod',
+              payment_method: apiPaymentMethod,
             });
             localStorage.removeItem('cart');
-            this.showToast(`Order placed! ${order.order_number || order.id}`, 'success');
+            let paymentNote = '';
+            if (apiPaymentMethod === 'stripe' || apiPaymentMethod === 'razorpay') {
+              try {
+                const intent = await createPaymentIntent(order.id, apiPaymentMethod);
+                if (intent.client_secret) {
+                  paymentNote = ' Complete card payment in Stripe checkout.';
+                } else if (intent.razorpay_order_id) {
+                  paymentNote = ` Razorpay order: ${intent.razorpay_order_id}.`;
+                }
+              } catch (payErr) {
+                console.warn('Payment intent not created', payErr);
+                paymentNote = ' (Online payment setup pending — pay via COD or retry.)';
+              }
+            }
+            this.showToast(`Order placed! ${order.order_number || order.id}${paymentNote}`, 'success');
             setTimeout(() => {
               window.location.href = `order.html?orderId=${order.order_number || order.id}`;
             }, 1500);

@@ -398,4 +398,23 @@ export async function deleteOrder(id) {
   return apiRequest(`/orders/${id}/`, { method: 'DELETE' });
 }
 
+// --- Payments ---
+export async function createPaymentIntent(orderId, paymentMethod = 'stripe') {
+  return unwrapObject(
+    await apiRequest('/payments/create-intent/', {
+      method: 'POST',
+      body: JSON.stringify({ order_id: orderId, payment_method: paymentMethod }),
+    })
+  );
+}
+
+export async function verifyPayment(paymentId, paymentMethod = 'stripe') {
+  return unwrapObject(
+    await apiRequest('/payments/verify/', {
+      method: 'POST',
+      body: JSON.stringify({ payment_id: paymentId, payment_method: paymentMethod }),
+    })
+  );
+}
+
 export { API_BASE, getApiBase, unwrapPaginated, unwrapObject };
