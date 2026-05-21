@@ -2,10 +2,11 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     AuthView, RegisterView, VerifyEmailView, RequestPasswordResetView, PasswordResetConfirmView,
-    RegisterView, TokenRefreshFromCookieView, GetCSRFTokenView, LogoutView,
+    TokenRefreshFromCookieView, GetCSRFTokenView, LogoutView,
     CategoryViewSet, SubcategoryViewSet,
     ProductViewSet, CartViewSet, WishlistViewSet, OrderViewSet,
-    ReviewViewSet, BannerViewSet, UserProfileViewSet, DashboardView
+    ReviewViewSet, BannerViewSet, UserProfileViewSet,     DashboardView,
+    HealthCheckView,
 )
 from .webhooks import StripeWebhookView, RazorpayWebhookView
 
@@ -34,6 +35,7 @@ urlpatterns = [
     path('payments/stripe-webhook/', StripeWebhookView.as_view(), name='stripe_webhook'),
     path('payments/razorpay-webhook/', RazorpayWebhookView.as_view(), name='razorpay_webhook'),
 
+    path('health/', HealthCheckView.as_view(), name='health'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('', include(router.urls)),
 ]

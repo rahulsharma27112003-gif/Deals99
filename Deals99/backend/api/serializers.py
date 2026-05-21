@@ -5,7 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 User = get_user_model()
 from .models import (
     Category, Subcategory, Product, ProductImage, UserProfile,
-    Cart, Wishlist, Order, OrderItem, Review, Banner
+    Cart, Wishlist, Order, OrderItem, Payment, Review, Banner
 )
 
 
@@ -233,17 +233,29 @@ class OrderItemSerializer(serializers.ModelSerializer):
         read_only_fields = ['total_price']
 
 
+class PaymentSerializer(serializers.ModelSerializer):
+    """Serializes a Payment record (read-only for Order payloads)."""
+    class Meta:
+        model = Payment
+        fields = [
+            'id', 'payment_id', 'payment_method', 'status', 'amount', 'currency',
+            'transaction_id', 'created_at', 'completed_at'
+        ]
+        read_only_fields = ['id', 'payment_id', 'status', 'created_at', 'completed_at']
+
+
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
-    
+    payment = serializers.SerializerMethodField()
+
     class Meta:
         model = Order
         fields = [
             'id', 'order_number', 'user', 'user_name', 'user_email', 'status',
             'total_amount', 'shipping_address', 'payment_method', 'payment_status',
-            'items', 'created_at', 'updated_at'
+            'payment', 'items', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'order_number',
@@ -254,6 +266,13 @@ class OrderSerializer(serializers.ModelSerializer):
             'user',
             'total_amount',
         ]
+
+    def get_payment(self, obj):
+        """Return the latest Payment for the order (or None)."""
+        latest = obj.payments.order_by('-created_at').first()
+        if not latest:
+            return None
+        return PaymentSerializer(latest, context=self.context).data
 
 
 class ReviewSerializer(serializers.ModelSerializer):

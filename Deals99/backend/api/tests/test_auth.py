@@ -130,6 +130,7 @@ class AuthenticationTestCase(TestCase):
         # Create a test user
         User.objects.create_user(
             username=self.test_user_data['username'],
+            email=self.test_user_data['email'],
             password=self.test_user_data['password']
         )
         
@@ -153,6 +154,7 @@ class AuthenticationTestCase(TestCase):
         # Create user and get tokens
         User.objects.create_user(
             username=self.test_user_data['username'],
+            email=self.test_user_data['email'],
             password=self.test_user_data['password']
         )
         

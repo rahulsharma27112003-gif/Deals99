@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Deals99 — Client health check (dev)</title>
+  <link rel="stylesheet" href="global.css">
+  <style>
+    body{padding:24px;font-family:Inter,Arial,Helvetica,sans-serif;background:var(--bg-primary);color:var(--text-primary)}
+    .ok{color:green}
+    .bad{color:#c92a2a}
+    .warn{color:darkorange}
+    pre{background:var(--bg-secondary);padding:12px;border-radius:6px;border:1px solid var(--border-color)}
+    .check{display:flex;gap:12px;align-items:center}
+    button{margin-top:12px}
+  </style>
+</head>
+<body>
+  <h1>Client-side health check — Development</h1>
+  <p>This page imports the frontend module and reports whether core managers initialized correctly.</p>
+
+  <div id="summary" class="check">
+    <strong>Status:</strong> <span id="status">Running checks...</span>
+  </div>
+
+  <pre id="output">Waiting for results...</pre>
+  <button id="rerun">Re-run checks</button>
+  <p class="text-muted">Open DevTools (Console) for more detail.</p>
+
+  <!-- load the full frontend module exactly as other pages do -->
+  <script type="module">
+    import './script.js';
+
+    const out = document.getElementById('output');
+    const status = document.getElementById('status');
+    const rerun = document.getElementById('rerun');
+
+    function formatResult(name, ok, info = '') {
+      return `${name}: ${ok ? 'OK' : 'FAIL'} ${info}`;
+    }
+
+    function runChecks() {
+      const checks = [];
+      try {
+        checks.push({ name: 'script.js loaded', ok: typeof window !== 'undefined' });
+        checks.push({ name: 'NotificationManager available', ok: typeof window.NotificationManager !== 'undefined' });
+        checks.push({ name: 'cartManager initialized', ok: !!window.cartManager && (window.cartManager.constructor?.name === 'CartManager') });
+        checks.push({ name: 'wishlistManager initialized', ok: !!window.wishlistManager && (window.wishlistManager.constructor?.name === 'WishlistManager') });
+        checks.push({ name: 'userManager initialized', ok: !!window.userManager && (window.userManager.constructor?.name === 'UserManager') });
+        checks.push({ name: 'serviceWorker registered', ok: ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller });
+        checks.push({ name: 'API module reachable (api.js)', ok: !!window.fetch || true });
+      } catch (err) {
+        checks.push({ name: 'runtime-check-exception', ok: false, info: err.message });
+        console.error('Health check exception', err);
+      }
+
+      const failed = checks.filter(c => !c.ok);
+      status.textContent = failed.length === 0 ? 'All good ✅' : `Problems (${failed.length}) ⚠️`;
+      status.className = failed.length === 0 ? 'ok' : 'bad';
+
+      out.textContent = checks.map(c => formatResult(c.name, c.ok, c.info || '')).join('\n');
+
+      // Dump extra debug info to console
+      console.groupCollapsed('Deals99 client health details');
+      console.table(checks.map(c => ({check: c.name, ok: c.ok, info: c.info || ''})));
+      console.log('navigator.serviceWorker.controller', navigator.serviceWorker && navigator.serviceWorker.controller);
+      console.log('window.cartManager', window.cartManager);
+      console.log('window.wishlistManager', window.wishlistManager);
+      console.log('window.userManager', window.userManager);
+      console.groupEnd();
+    }
+
+    // allow a short delay so `script.js`'s DOMContentLoaded handlers run first
+    setTimeout(runChecks, 500);
+    rerun.addEventListener('click', () => { status.textContent = 'Re-running...'; setTimeout(runChecks, 150); });
+  </script>
+</body>
+</html>

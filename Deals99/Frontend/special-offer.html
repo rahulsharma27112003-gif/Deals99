@@ -196,7 +196,7 @@
     </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
   <script>
     // Demo special offers data
     const offersData = [
@@ -261,7 +261,7 @@
       grid.innerHTML = offersData.map(offer => `
         <div class="offer-card">
           <div class="offer-badge">${offer.badge}</div>
-          <img src="${offer.img}" alt="${offer.name}" class="offer-img">
+          <img loading="lazy" src="${offer.img}" alt="${offer.name}" class="offer-img">
           <div class="offer-name">${offer.name}</div>
           <div class="offer-desc">${offer.desc}</div>
           <div class="offer-price">₹${offer.price.toLocaleString()}</div>

@@ -226,7 +226,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
   <script>
     // Demo deals data
     const dealsData = [
@@ -285,7 +285,7 @@
       grid.innerHTML = dealsData.map(deal => `
         <div class="deal-card">
           <div class="deal-badge">${deal.badge}</div>
-          <img src="${deal.img}" alt="${deal.name}" class="deal-img">
+          <img loading="lazy" src="${deal.img}" alt="${deal.name}" class="deal-img">
           <div class="deal-name">${deal.name}</div>
           <div class="deal-desc">${deal.desc}</div>
           <div class="deal-price">₹${deal.price}</div>

@@ -1,13 +1,43 @@
-const API_BASE = "http://localhost:8000/api";
+/**
+ * Deals99 API client — environment-aware base URL, JWT auth, pagination helpers.
+ */
+function getApiBase() {
+  if (typeof window !== 'undefined' && window.__DEALS99_API_BASE__) {
+    return String(window.__DEALS99_API_BASE__).replace(/\/$/, '');
+  }
+  if (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:')) {
+    return `${window.location.origin}/api`;
+  }
+  return 'http://localhost:8000/api';
+}
 
-// --- API Configuration ---
+const API_BASE = getApiBase();
+
 const API_CONFIG = {
   baseURL: API_BASE,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
-  }
+  },
 };
+
+/** Normalize DRF paginated or admin wrapped responses to arrays/objects. */
+export function unwrapPaginated(data) {
+  if (data == null) return [];
+  if (Array.isArray(data)) return data;
+  if (data.success === true && data.data !== undefined) {
+    if (Array.isArray(data.data)) return data.data;
+    if (data.data?.results) return data.data.results;
+    return data.data;
+  }
+  if (Array.isArray(data.results)) return data.results;
+  return data;
+}
+
+export function unwrapObject(data) {
+  if (data?.success === true && data.data !== undefined) return data.data;
+  return data;
+}
 
 // --- Token Management ---
 class TokenManager {
@@ -26,7 +56,7 @@ class TokenManager {
 
   static getAuthHeaders() {
     const token = this.getToken();
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
+    return token ? { Authorization: `Bearer ${token}` } : {};
   }
 }
 
@@ -34,7 +64,7 @@ class TokenManager {
 async function apiRequest(endpoint, options = {}) {
   const url = `${API_CONFIG.baseURL}${endpoint}`;
   const config = {
-    ...API_CONFIG,
+    credentials: options.credentials ?? 'include',
     ...options,
     headers: {
       ...API_CONFIG.headers,
@@ -44,52 +74,55 @@ async function apiRequest(endpoint, options = {}) {
   };
 
   try {
-    const response = await fetch(url, config);
-    
-    if (response.status === 401) {
-      // Token expired, try to refresh
+    let response = await fetch(url, config);
+
+    if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
       const refreshed = await refreshToken();
       if (refreshed) {
-        // Retry the request with new token
         config.headers = { ...config.headers, ...TokenManager.getAuthHeaders() };
-        const retryResponse = await fetch(url, config);
-        if (!retryResponse.ok) throw new Error(`HTTP ${retryResponse.status}: ${retryResponse.statusText}`);
-        return await retryResponse.json();
+        response = await fetch(url, config);
       } else {
-        // Refresh failed, redirect to login
         TokenManager.removeToken();
-        window.location.href = '/login.html';
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('isAdminLoggedIn');
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('login')) {
+          window.location.href = '/login.html';
+        }
         throw new Error('Authentication failed');
       }
     }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      const msg =
+        errorData.error ||
+        errorData.message ||
+        errorData.detail ||
+        (errorData.non_field_errors && errorData.non_field_errors[0]) ||
+        `HTTP ${response.status}: ${response.statusText}`;
+      throw new Error(msg);
     }
 
+    if (response.status === 204) return null;
     return await response.json();
   } catch (error) {
-    console.error('API Request failed:', error);
+    console.error('API Request failed:', endpoint, error);
     throw error;
   }
 }
 
-// --- Token Refresh ---
 async function refreshToken() {
-  // Cookie-based refresh flow. Server sets refresh token as HttpOnly cookie on login/register.
   try {
-    // Ensure CSRF cookie is available
     await fetch(`${API_CONFIG.baseURL}/auth/csrf/`, { credentials: 'include' });
-    const csrfToken = document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1];
+    const csrfToken = document.cookie.split('; ').find((row) => row.startsWith('csrftoken='))?.split('=')[1];
 
     const response = await fetch(`${API_CONFIG.baseURL}/auth/refresh/`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {})
-      }
+        ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+      },
     });
 
     if (response.ok) {
@@ -107,197 +140,218 @@ async function refreshToken() {
 export async function loginUser(username, password) {
   const data = await apiRequest('/auth/login/', {
     method: 'POST',
-    credentials: 'include',
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify({ username, password }),
   });
   TokenManager.setToken(data.access);
-  // Refresh token is set as HttpOnly cookie by the server; do not store it in localStorage
+  if (data.user) setCurrentUser(data.user);
   return data;
 }
 
 export async function registerUser(userData) {
+  const payload = {
+    username: userData.username || userData.email?.split('@')[0] || `user_${Date.now()}`,
+    email: userData.email,
+    first_name: userData.first_name || userData.firstName || '',
+    last_name: userData.last_name || userData.lastName || '',
+    password: userData.password,
+    password_confirm: userData.password_confirm || userData.passwordConfirm || userData.password,
+    phone: userData.phone || '',
+    address: userData.address || '',
+    date_of_birth: userData.date_of_birth || userData.birthDate || null,
+    gender: userData.gender || '',
+    newsletter_subscribed: userData.newsletter_subscribed ?? userData.newsletter ?? false,
+  };
   const data = await apiRequest('/auth/register/', {
     method: 'POST',
-    credentials: 'include',
-    body: JSON.stringify(userData)
+    body: JSON.stringify(payload),
   });
   TokenManager.setToken(data.access);
+  if (data.user) setCurrentUser(data.user);
   return data;
 }
 
 export function logoutUser() {
-  // Call server to clear refresh cookie and blacklist token
   fetch(`${API_CONFIG.baseURL}/auth/logout/`, { method: 'POST', credentials: 'include' }).catch(() => {});
   TokenManager.removeToken();
   localStorage.removeItem('isLoggedIn');
   localStorage.removeItem('isAdminLoggedIn');
+  localStorage.removeItem('user_data');
 }
 
 // --- Products ---
 export async function fetchProducts(params = {}) {
   const query = new URLSearchParams(params).toString();
-  return await apiRequest(`/products/?${query}`);
+  const data = await apiRequest(`/products/${query ? `?${query}` : ''}`);
+  return unwrapPaginated(data);
 }
 
 export async function fetchProduct(id) {
-  return await apiRequest(`/products/${id}/`);
+  return unwrapObject(await apiRequest(`/products/${id}/`));
 }
 
 export async function fetchFeaturedProducts() {
-  return await apiRequest('/products/featured/');
+  const data = await apiRequest('/products/featured/');
+  return unwrapPaginated(data);
 }
 
 export async function fetchDeals() {
-  return await apiRequest('/products/deals/');
+  const data = await apiRequest('/products/deals/');
+  return unwrapPaginated(data);
 }
 
 export async function addProduct(data) {
-  return await apiRequest('/products/', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
+  return apiRequest('/products/', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export async function updateProduct(id, data) {
-  return await apiRequest(`/products/${id}/`, {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  });
+  return apiRequest(`/products/${id}/`, { method: 'PUT', body: JSON.stringify(data) });
 }
 
 export async function deleteProduct(id) {
-  return await apiRequest(`/products/${id}/`, {
-    method: 'DELETE'
-  });
+  return apiRequest(`/products/${id}/`, { method: 'DELETE' });
 }
 
 // --- Categories ---
 export async function fetchCategories() {
-  return await apiRequest('/categories/');
+  return unwrapPaginated(await apiRequest('/categories/'));
 }
 
 export async function fetchSubcategories(categoryId = null) {
   const params = categoryId ? `?parent_category=${categoryId}` : '';
-  return await apiRequest(`/subcategories/${params}`);
+  return unwrapPaginated(await apiRequest(`/subcategories/${params}`));
 }
 
 // --- Cart ---
 export async function fetchCart() {
-  return await apiRequest('/cart/');
+  return unwrapPaginated(await apiRequest('/cart/'));
 }
 
 export async function addToCart(productId, quantity = 1) {
-  return await apiRequest('/cart/', {
+  return apiRequest('/cart/', {
     method: 'POST',
-    body: JSON.stringify({ product_id: productId, quantity })
+    body: JSON.stringify({ product_id: productId, quantity }),
   });
 }
 
 export async function updateCartItem(id, quantity) {
-  return await apiRequest(`/cart/${id}/`, {
+  return apiRequest(`/cart/${id}/`, {
     method: 'PUT',
-    body: JSON.stringify({ quantity })
+    body: JSON.stringify({ quantity }),
   });
 }
 
 export async function removeFromCart(id) {
-  return await apiRequest(`/cart/${id}/`, {
-    method: 'DELETE'
-  });
+  return apiRequest(`/cart/${id}/`, { method: 'DELETE' });
 }
 
 export async function clearCart() {
-  return await apiRequest('/cart/clear/', {
-    method: 'POST'
-  });
+  return apiRequest('/cart/clear/', { method: 'POST' });
 }
 
 export async function getCartTotal() {
-  return await apiRequest('/cart/total/');
+  return unwrapObject(await apiRequest('/cart/total/'));
 }
 
 // --- Wishlist ---
 export async function fetchWishlist() {
-  return await apiRequest('/wishlist/');
+  return unwrapPaginated(await apiRequest('/wishlist/'));
 }
 
 export async function addToWishlist(productId) {
-  return await apiRequest('/wishlist/', {
+  return apiRequest('/wishlist/', {
     method: 'POST',
-    body: JSON.stringify({ product_id: productId })
+    body: JSON.stringify({ product_id: productId }),
   });
 }
 
 export async function removeFromWishlist(id) {
-  return await apiRequest(`/wishlist/${id}/`, {
-    method: 'DELETE'
-  });
+  return apiRequest(`/wishlist/${id}/`, { method: 'DELETE' });
 }
 
 // --- Orders ---
 export async function fetchOrders() {
-  return await apiRequest('/orders/');
+  return unwrapPaginated(await apiRequest('/orders/'));
 }
 
 export async function fetchOrder(id) {
-  return await apiRequest(`/orders/${id}/`);
+  return unwrapObject(await apiRequest(`/orders/${id}/`));
 }
 
 export async function createOrder(orderData) {
-  return await apiRequest('/orders/create_from_cart/', {
-    method: 'POST',
-    body: JSON.stringify(orderData)
-  });
+  return unwrapObject(
+    await apiRequest('/orders/create_from_cart/', {
+      method: 'POST',
+      body: JSON.stringify(orderData),
+    })
+  );
 }
 
 export async function updateOrderStatus(id, status) {
-  return await apiRequest(`/orders/${id}/update_status/`, {
-    method: 'PATCH',
-    body: JSON.stringify({ status })
-  });
+  return unwrapObject(
+    await apiRequest(`/orders/${id}/update_status/`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    })
+  );
 }
+
+/** Alias for legacy script imports */
+export const updateOrder = updateOrderStatus;
 
 // --- Reviews ---
 export async function fetchProductReviews(productId) {
-  return await apiRequest(`/products/${productId}/reviews/`);
+  return unwrapPaginated(await apiRequest(`/products/${productId}/reviews/`));
 }
 
 export async function addReview(productId, reviewData) {
-  return await apiRequest(`/products/${productId}/add_review/`, {
+  return apiRequest(`/products/${productId}/add_review/`, {
     method: 'POST',
-    body: JSON.stringify(reviewData)
+    body: JSON.stringify(reviewData),
   });
 }
 
 export async function markReviewHelpful(reviewId) {
-  return await apiRequest(`/reviews/${reviewId}/mark_helpful/`, {
-    method: 'POST'
-  });
+  return apiRequest(`/reviews/${reviewId}/mark_helpful/`, { method: 'POST' });
 }
 
 // --- Banners ---
 export async function fetchBanners() {
-  return await apiRequest('/banners/');
+  return unwrapPaginated(await apiRequest('/banners/'));
 }
 
 // --- User Profile ---
 export async function fetchUserProfile() {
-  return await apiRequest('/profile/me/');
+  return unwrapObject(await apiRequest('/profile/me/'));
 }
 
 export async function updateUserProfile(data) {
-  return await apiRequest('/profile/me/', {
-    method: 'PATCH',
-    body: JSON.stringify(data)
-  });
+  return unwrapObject(
+    await apiRequest('/profile/me/', { method: 'PATCH', body: JSON.stringify(data) })
+  );
 }
 
-// --- Admin Dashboard ---
+// --- Admin Dashboard (legacy + v1 paths) ---
 export async function fetchDashboardStats() {
-  return await apiRequest('/dashboard/');
+  try {
+    return unwrapObject(await apiRequest('/admin/dashboard/'));
+  } catch {
+    return unwrapObject(await apiRequest('/v1/admin/dashboard/'));
+  }
 }
 
-// --- Utility Functions ---
+export async function fetchAdminRevenue() {
+  return unwrapObject(await apiRequest('/admin/revenue/'));
+}
+
+export async function fetchAdminTopProducts(limit = 10) {
+  return unwrapObject(await apiRequest(`/admin/top-products/?limit=${limit}`));
+}
+
+export async function fetchAdminLowStock(threshold = 10) {
+  return unwrapObject(await apiRequest(`/admin/low-stock/?threshold=${threshold}`));
+}
+
+// --- Utility ---
 export function isAuthenticated() {
   return !!TokenManager.getToken();
 }
@@ -308,30 +362,40 @@ export function getCurrentUser() {
 }
 
 export function setCurrentUser(userData) {
-  localStorage.setItem('user_data', JSON.stringify(userData));
+  if (userData) {
+    localStorage.setItem('user_data', JSON.stringify(userData));
+  } else {
+    localStorage.removeItem('user_data');
+  }
 }
 
-// ===== USER MANAGEMENT =====
+// --- Admin user management (admin_dashboard API) ---
 export async function fetchUsers() {
-  return await apiRequest('/users/');
+  return unwrapPaginated(await apiRequest('/admin/users/'));
 }
 
 export async function updateUser(id, data) {
-  return await apiRequest(`/users/${id}/`, {
-    method: 'PUT',
-    body: JSON.stringify(data)
+  return apiRequest(`/admin/users/${id}/`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
   });
 }
 
 export async function deleteUser(id) {
-  return await apiRequest(`/users/${id}/`, {
-    method: 'DELETE'
-  });
+  return apiRequest(`/admin/users/${id}/`, { method: 'DELETE' });
 }
 
-// ===== ORDER MANAGEMENT =====
-export async function deleteOrder(id) {
-  return await apiRequest(`/orders/${id}/`, {
-    method: 'DELETE'
-  });
+export async function adminUpdateOrderStatus(orderId, status) {
+  return unwrapObject(
+    await apiRequest('/admin/order-status-update/', {
+      method: 'POST',
+      body: JSON.stringify({ order_id: orderId, status }),
+    })
+  );
 }
+
+export async function deleteOrder(id) {
+  return apiRequest(`/orders/${id}/`, { method: 'DELETE' });
+}
+
+export { API_BASE, getApiBase, unwrapPaginated, unwrapObject };

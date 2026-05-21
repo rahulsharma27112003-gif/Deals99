@@ -92,7 +92,7 @@ class AuthView(APIView):
                 secure=not settings.DEBUG,
                 samesite='Lax',
                 max_age=cookie_max_age,
-                path='/api/auth/refresh/'
+                path='/'
             )
             get_token(request)
             return response
@@ -123,26 +123,56 @@ class RegisterView(APIView):
         """
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            # create user but do not auto-activate until they verify via email
             user = serializer.save()
+
+            # Development: immediate activation + JWT for local/testing UX
+            if settings.DEBUG:
+                user.is_active = True
+                if hasattr(user, 'is_email_verified'):
+                    user.is_email_verified = True
+                user.save()
+                refresh = RefreshToken.for_user(user)
+                response = Response({
+                    'access': str(refresh.access_token),
+                    'user': UserSerializer(user).data,
+                }, status=status.HTTP_201_CREATED)
+                cookie_max_age = int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
+                response.set_cookie(
+                    key='refresh',
+                    value=str(refresh),
+                    httponly=True,
+                    secure=not settings.DEBUG,
+                    samesite='Lax',
+                    max_age=cookie_max_age,
+                    path='/',
+                )
+                get_token(request)
+                try:
+                    from .notifications import NotificationTrigger
+                    NotificationTrigger.on_user_registered(user)
+                except Exception:
+                    pass
+                return response
+
+            # Production: require email verification before login
             try:
                 user.is_active = False
-                # If the custom user model exposes is_email_verified, keep it false
                 if hasattr(user, 'is_email_verified'):
                     user.is_email_verified = False
                 user.save()
             except Exception:
                 pass
 
-            # generate verification token and send email asynchronously (or sync for now)
             from utils.tokens import make_email_verification_token
             from .notifications import EmailNotificationService
 
             token = make_email_verification_token(user)
             EmailNotificationService.send_verification_email(user, token)
 
-            # return safe response (do not log user in until verification)
-            return Response({'detail': 'Registration successful. Verify your email before logging in.'}, status=status.HTTP_201_CREATED)
+            return Response(
+                {'detail': 'Registration successful. Verify your email before logging in.'},
+                status=status.HTTP_201_CREATED,
+            )
 
         errors = serializer.errors
         non_field_errors = errors.get('non_field_errors')
@@ -271,7 +301,7 @@ class TokenRefreshFromCookieView(APIView):
             secure=not settings.DEBUG,
             samesite='Lax',
             max_age=cookie_max_age,
-            path='/api/auth/refresh/',
+            path='/',
         )
         return response
 
@@ -305,7 +335,7 @@ class LogoutView(APIView):
 
         response = Response({'detail': 'Logged out'})
         # delete cookie by setting empty value and max_age=0
-        response.delete_cookie('refresh', path='/api/auth/refresh/')
+        response.delete_cookie('refresh', path='/')
         return response
 
 
@@ -343,6 +373,11 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.select_related('category', 'subcategory').prefetch_related('images', 'reviews')
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), IsStaffOrAbove()]
+        return [AllowAny()]
     filterset_fields = ['category', 'subcategory', 'active', 'featured']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'price', 'created_at']
@@ -603,6 +638,25 @@ class UserProfileViewSet(viewsets.ModelViewSet):
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class HealthCheckView(APIView):
+    """Liveness/readiness probe for load balancers and Docker."""
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        from django.db import connection
+        db_ok = True
+        try:
+            connection.ensure_connection()
+        except Exception:
+            db_ok = False
+        return Response({
+            'status': 'ok' if db_ok else 'degraded',
+            'service': 'deals99-api',
+            'database': 'ok' if db_ok else 'unavailable',
+        }, status=status.HTTP_200_OK if db_ok else status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 class DashboardView(APIView):

@@ -4,35 +4,27 @@ User = get_user_model()
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from api.models import UserProfile, Order
+from api.models import Order
 
 
 class AdminDashboardPermissionsTests(APITestCase):
     def setUp(self):
         self.super_admin = User.objects.create_superuser(
-            username='superadmin',
             email='super@example.com',
             password='pass1234',
         )
         self.manager = User.objects.create_user(
-            username='manager',
             email='manager@example.com',
             password='pass1234',
             is_staff=True,
         )
-        # A profile is auto-created via signals; update its role instead of creating a duplicate
-        manager_profile = UserProfile.objects.get(user=self.manager)
-        manager_profile.role = 'manager'
-        manager_profile.save()
+        self.manager.role = User.ROLE_MANAGER
+        self.manager.save(update_fields=['role'])
 
         self.customer = User.objects.create_user(
-            username='customer',
             email='customer@example.com',
             password='pass1234',
         )
-        customer_profile = UserProfile.objects.get(user=self.customer)
-        customer_profile.role = 'customer'
-        customer_profile.save()
 
     def test_overview_requires_admin_role(self):
         url = '/api/admin/dashboard/'
@@ -64,23 +56,17 @@ class AdminDashboardPermissionsTests(APITestCase):
 class AdminOrderStatusUpdateTests(APITestCase):
     def setUp(self):
         self.manager = User.objects.create_user(
-            username='manager',
             email='manager@example.com',
             password='pass1234',
             is_staff=True,
         )
-        manager_profile = UserProfile.objects.get(user=self.manager)
-        manager_profile.role = 'manager'
-        manager_profile.save()
+        self.manager.role = User.ROLE_MANAGER
+        self.manager.save(update_fields=['role'])
 
         self.customer = User.objects.create_user(
-            username='customer',
             email='customer@example.com',
             password='pass1234',
         )
-        customer_profile = UserProfile.objects.get(user=self.customer)
-        customer_profile.role = 'customer'
-        customer_profile.save()
 
         self.order = Order.objects.create(
             user=self.customer,

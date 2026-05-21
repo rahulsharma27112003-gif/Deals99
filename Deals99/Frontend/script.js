@@ -29,7 +29,9 @@ const CONFIG = {
   MAX_RECENT_ITEMS: 10,
   MAX_CART_ITEMS: 50,
   MAX_WISHLIST_ITEMS: 100,
-  API_BASE: 'http://localhost:8000/api'
+  API_BASE: (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:'))
+    ? `${window.location.origin}/api`
+    : 'http://localhost:8000/api'
 };
 
 // ===== STORAGE MANAGER =====
@@ -95,13 +97,20 @@ class CartManager {
 
     try {
       const cartData = await fetchCart();
-      this.items = cartData.map(item => ({
+      const rows = Array.isArray(cartData) ? cartData : [];
+      this.items = rows.map(item => ({
         id: item.id,
         product: item.product,
+        product_id: item.product?.id,
+        name: item.product?.name,
+        price: item.product?.price,
+        img: item.product?.primary_image,
         qty: item.quantity,
+        quantity: item.quantity,
         total_price: item.total_price,
         addedAt: item.created_at
       }));
+      StorageManager.set(CONFIG.STORAGE_KEYS.CART, this.items);
     } catch (error) {
       console.error('Failed to load cart from backend:', error);
       this.items = StorageManager.get(CONFIG.STORAGE_KEYS.CART);
@@ -110,11 +119,105 @@ class CartManager {
 
   async addItem(product) {
     try {
-      if (isAuthenticated()) {
-        // Add to backend
-    `).join('');
+      const productId = product.id || product.product_id || product.product?.id;
+      if (isAuthenticated() && productId) {
+        await addToCart(productId, product.qty || product.quantity || 1);
+        await this.loadCartFromBackend();
+      } else {
+        const existing = this.items.find(
+          (item) => item.id === product.id || item.name === product.name
+        );
+        if (existing) {
+          existing.qty = Math.min(10, (existing.qty || 1) + 1);
+          existing.quantity = existing.qty;
+        } else {
+          this.items.push({
+            ...product,
+            id: product.id || `cart_${Date.now()}`,
+            qty: product.qty || 1,
+            quantity: product.qty || 1,
+            addedAt: new Date().toISOString()
+          });
+        }
+        if (this.items.length > CONFIG.MAX_CART_ITEMS) {
+          this.items = this.items.slice(-CONFIG.MAX_CART_ITEMS);
+        }
+        StorageManager.set(CONFIG.STORAGE_KEYS.CART, this.items);
+      }
+      this.updateCartCount();
+      NotificationManager.show(`Added to cart: ${product.name}`, 'success');
+      return true;
+    } catch (error) {
+      console.error('CartManager: Error adding item:', error);
+      NotificationManager.show('Failed to add item to cart', 'error');
+      return false;
+    }
+  }
 
-    cartContainer.innerHTML = cartHTML;
+  async updateQuantity(productId, newQty) {
+    const qty = Math.max(1, Math.min(10, parseInt(newQty, 10) || 1));
+    try {
+      if (isAuthenticated()) {
+        const line = this.items.find(
+          (item) => item.id === productId || item.product_id === productId || item.name === productId
+        );
+        if (line?.id) {
+          await updateCartItem(line.id, qty);
+          await this.loadCartFromBackend();
+        }
+      } else {
+        const line = this.items.find(
+          (item) => item.id === productId || item.name === productId
+        );
+        if (line) {
+          line.qty = qty;
+          line.quantity = qty;
+          StorageManager.set(CONFIG.STORAGE_KEYS.CART, this.items);
+        }
+      }
+      this.updateCartCount();
+      return true;
+    } catch (error) {
+      console.error('CartManager: Error updating quantity:', error);
+      return false;
+    }
+  }
+
+  async removeItem(productId) {
+    try {
+      if (isAuthenticated()) {
+        const line = this.items.find(
+          (item) => item.id === productId || item.product_id === productId || item.name === productId
+        );
+        if (line?.id) {
+          await removeFromCart(line.id);
+          await this.loadCartFromBackend();
+        }
+      } else {
+        this.items = this.items.filter(
+          (item) => item.id !== productId && item.name !== productId
+        );
+        StorageManager.set(CONFIG.STORAGE_KEYS.CART, this.items);
+      }
+      this.updateCartCount();
+      NotificationManager.show('Item removed from cart', 'info');
+      return true;
+    } catch (error) {
+      console.error('CartManager: Error removing item:', error);
+      return false;
+    }
+  }
+
+  getCartCount() {
+    return this.items.reduce((sum, item) => sum + (item.qty || item.quantity || 1), 0);
+  }
+
+  updateCartCount() {
+    const count = this.getCartCount();
+    document.querySelectorAll('.cart-count, #cartCount, [data-cart-count]').forEach((el) => {
+      el.textContent = count;
+      el.style.display = count > 0 ? 'inline-flex' : 'none';
+    });
   }
 
   setupEventListeners() {
@@ -465,8 +568,8 @@ class UserManager {
     }
   }
 
-  handleLogin() {
-    const email = document.getElementById('email')?.value;
+  async handleLogin() {
+    const email = document.getElementById('email')?.value?.trim();
     const password = document.getElementById('password')?.value;
 
     if (!email || !password) {
@@ -474,38 +577,39 @@ class UserManager {
       return;
     }
 
-    // Simulate login process
-    const userData = {
-      name: email.split('@')[0],
-      email: email,
-      loginTime: new Date().toISOString()
-    };
-
-    if (this.login(userData)) {
+    const ok = await this.login({ username: email, password });
+    if (ok) {
       setTimeout(() => {
         window.location.href = 'index.html';
-      }, 1500);
+      }, 800);
     }
   }
 
-  handleRegister() {
-    const formData = new FormData(document.getElementById('registerForm'));
+  async handleRegister() {
+    const form = document.getElementById('registerForm');
+    if (!form) return;
+    const formData = new FormData(form);
+    const password = formData.get('password') || document.getElementById('password')?.value;
+    const passwordConfirm = formData.get('passwordConfirm') || formData.get('password_confirm') || password;
     const userData = {
+      username: formData.get('username') || formData.get('email')?.split('@')[0],
+      email: formData.get('email'),
       firstName: formData.get('firstName'),
       lastName: formData.get('lastName'),
-      email: formData.get('email'),
+      password,
+      passwordConfirm,
       phone: formData.get('phone'),
       address: formData.get('address'),
       gender: formData.get('gender'),
       birthDate: formData.get('birthDate'),
       newsletter: document.getElementById('newsletter')?.checked || false,
-      registrationDate: new Date().toISOString()
     };
 
-    if (this.register(userData)) {
+    const ok = await this.register(userData);
+    if (ok) {
       setTimeout(() => {
         window.location.href = 'index.html';
-      }, 2000);
+      }, 1000);
     }
   }
 
@@ -1272,6 +1376,107 @@ document.addEventListener('DOMContentLoaded', function() {
     window.NotificationManager = NotificationManager;
     window.ModalManager = ModalManager;
 
+    // Ensure core managers exist for pages that import `script.js` as a module
+    // (idempotent — will not re-create an already initialized manager)
+    (function ensureGlobalManagers() {
+      const createIfMissing = () => {
+        const created = [];
+        try {
+          if (!window.cartManager) { window.cartManager = new CartManager(); created.push('cartManager'); }
+          if (!window.wishlistManager) { window.wishlistManager = new WishlistManager(); created.push('wishlistManager'); }
+          if (!window.userManager) { window.userManager = new UserManager(); created.push('userManager'); }
+          if (!window.productManager) { window.productManager = new ProductManager(); created.push('productManager'); }
+          if (!window.reviewsManager) { window.reviewsManager = new ReviewsManager(); created.push('reviewsManager'); }
+          if (!window.darkModeManager) { window.darkModeManager = new DarkModeManager(); created.push('darkModeManager'); }
+          if (!window.recentlyViewedManager) { window.recentlyViewedManager = new RecentlyViewedManager(); created.push('recentlyViewedManager'); }
+          if (!window.countdownManager) { window.countdownManager = new CountdownManager(); created.push('countdownManager'); }
+
+          if (created.length) {
+            console.info('ensureGlobalManagers: created →', created.join(', '));
+          }
+        } catch (err) {
+          // Some constructors access DOM nodes that might not be present on every page.
+          // If that happens, try again after DOMContentLoaded once so page-specific markup can exist.
+          console.warn('ensureGlobalManagers: deferred due to', err && err.message);
+          document.addEventListener('DOMContentLoaded', () => {
+            try {
+              if (!window.cartManager) window.cartManager = new CartManager();
+              if (!window.wishlistManager) window.wishlistManager = new WishlistManager();
+              if (!window.userManager) window.userManager = new UserManager();
+              if (!window.productManager) window.productManager = new ProductManager();
+              if (!window.reviewsManager) window.reviewsManager = new ReviewsManager();
+              if (!window.darkModeManager) window.darkModeManager = new DarkModeManager();
+              if (!window.recentlyViewedManager) window.recentlyViewedManager = new RecentlyViewedManager();
+              if (!window.countdownManager) window.countdownManager = new CountdownManager();
+              console.info('ensureGlobalManagers: initialized after DOMContentLoaded');
+            } catch (err2) {
+              console.error('ensureGlobalManagers: failed on retry', err2 && err2.message);
+            }
+          }, { once: true });
+        }
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', createIfMissing, { once: true });
+      } else {
+        createIfMissing();
+      }
+    })();
+
+    // --- Register Service Worker (PWA) ---
+    (async function registerServiceWorker() {
+      if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+        try {
+          const registration = await navigator.serviceWorker.register('/service-worker.js');
+          console.info('ServiceWorker registered:', registration.scope);
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                NotificationManager && NotificationManager.show && NotificationManager.show('A new version is available — refresh to update', 'info');
+              }
+            });
+          });
+        } catch (err) {
+          console.warn('ServiceWorker registration failed:', err && err.message);
+        }
+      }
+    })();
+
+    // --- Client-side search: wire up existing search box to Fuse-based index ---
+    (async function wireClientSearch() {
+      try {
+        const { buildIndex, search } = await import('./search.js');
+        // Build index from product sources if available (featured + global live list)
+        let merged = [];
+        try { merged = (await fetchFeaturedProducts()) || []; } catch(e) { merged = []; }
+        if (Array.isArray(window.__LIVE_PRODUCTS__)) merged = merged.concat(window.__LIVE_PRODUCTS__);
+        if (merged.length) await buildIndex(merged);
+
+        const input = document.getElementById('clientSearchInput');
+        const resultsContainer = document.getElementById('searchResultsContainer');
+        if (!input || !resultsContainer) return;
+
+        let debounce = 0;
+        input.addEventListener('input', (ev) => {
+          clearTimeout(debounce);
+          const q = ev.target.value.trim();
+          debounce = setTimeout(() => {
+            if (!q) { resultsContainer.style.display = 'none'; resultsContainer.innerHTML = ''; return; }
+            const matches = search(q, 12);
+            resultsContainer.style.display = 'block';
+            if (!matches.length) {
+              resultsContainer.innerHTML = `<div class="card p-3">No results for "${q}"</div>`;
+              return;
+            }
+            resultsContainer.innerHTML = '<div class="row g-3">' + matches.map(p => `\n<div class="col-12 col-md-6">\n<div class="card p-3 d-flex gap-2">\n  <div class="d-flex gap-3">\n    <img src="${p.img || 'https://via.placeholder.com/100'}" loading="lazy" style="width:80px;height:80px;object-fit:contain;">\n    <div>\n      <div class="fw-bold">${p.name}</div>\n      <div class="text-muted">₹${p.price || p.mrp || 'N/A'}</div>\n      <div style=\"font-size:.85rem;color:var(--text-muted)\">${(p.desc||'').slice(0,80)}</div>\n    </div>\n  </div>\n</div>\n</div>`).join('') + '\n</div>';
+          }, 180);
+        });
+      } catch (err) {
+        console.warn('wireClientSearch failed:', err && err.message);
+      }
+    })();
+
   console.log('Deals99 Frontend initialized successfully!');
 });
 
@@ -1407,7 +1612,7 @@ async function loadProducts() {
 }
 
 // ===== ADMIN PANEL ORDER MANAGEMENT =====
-import { fetchOrders, updateOrder, deleteOrder } from './api.js';
+import { fetchOrders, updateOrderStatus, deleteOrder } from './api.js';
 
 async function loadOrders() {
   const ordersList = document.getElementById('ordersList');
@@ -1432,7 +1637,7 @@ async function loadOrders() {
 
 async function handleOrderStatusChange(id, status) {
   try {
-    await updateOrder(id, { status });
+    await updateOrderStatus(id, status);
     NotificationManager.show('Order status updated!', 'success');
     loadOrders();
   } catch (e) {

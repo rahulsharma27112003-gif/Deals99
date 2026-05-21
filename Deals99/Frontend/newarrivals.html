@@ -211,7 +211,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
   <script>
     // Demo new arrivals data
     const arrivalsData = [
@@ -271,7 +271,7 @@
       grid.innerHTML = filtered.map(arrival => `
         <div class="arrival-card">
           <div class="arrival-badge">${arrival.badge}</div>
-          <img src="${arrival.img}" alt="${arrival.name}" class="arrival-img">
+          <img loading="lazy" src="${arrival.img}" alt="${arrival.name}" class="arrival-img">
           <div class="arrival-name">${arrival.name}</div>
           <div class="arrival-desc">${arrival.desc}</div>
           <div class="arrival-price">₹${arrival.price.toLocaleString()}</div>

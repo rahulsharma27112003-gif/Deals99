@@ -21,6 +21,7 @@ class CartTestCase(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
+            email='testuser@example.com',
             password='testpass123'
         )
         self.product = ProductFactory(price=99.99, stock=50)
@@ -113,6 +114,7 @@ class WishlistTestCase(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
+            email='testuser@example.com',
             password='testpass123'
         )
         self.product = ProductFactory()

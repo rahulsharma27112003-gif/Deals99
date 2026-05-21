@@ -89,6 +89,12 @@ def create_order_from_cart(user, shipping_address: str, payment_method: str = 'c
     # Clear cart once order and items are created
     cart_items.delete()
 
+    try:
+        from api.notifications import NotificationTrigger
+        NotificationTrigger.on_order_created(order)
+    except Exception:
+        pass
+
     return OrderCreationResult(order=order, total_amount=total_amount)
 
 
@@ -103,5 +109,12 @@ def update_order_status(order: Order, new_status: str) -> Order:
 
     order.status = new_status
     order.save(update_fields=['status', 'updated_at'])
+
+    try:
+        from api.notifications import NotificationTrigger
+        NotificationTrigger.on_order_status_changed(order)
+    except Exception:
+        pass
+
     return order
 

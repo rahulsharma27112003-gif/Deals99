@@ -1,5 +1,22 @@
 from rest_framework.permissions import BasePermission
 
+# Map custom User.role values (e.g. SUPERADMIN) to permission slugs
+_ROLE_ALIASES = {
+    'superadmin': 'super_admin',
+    'super_admin': 'super_admin',
+    'admin': 'admin',
+    'manager': 'manager',
+    'staff': 'staff',
+    'customer': 'customer',
+}
+
+
+def _normalize_role(role: str) -> str:
+    if not role:
+        return 'customer'
+    key = role.lower() if isinstance(role, str) else str(role).lower()
+    return _ROLE_ALIASES.get(key, key)
+
 
 def _get_user_role(user) -> str:
     """Resolve role from the new custom User model when available.
@@ -16,15 +33,13 @@ def _get_user_role(user) -> str:
     # Prefer explicit role on the user if available
     role = getattr(user, 'role', None)
     if role:
-        return role.lower() if isinstance(role, str) else role
+        return _normalize_role(role)
 
-    # Backward-compatibility: check legacy profile.role if present
     profile = getattr(user, 'profile', None)
-    role = getattr(profile, 'role', None)
-    if role:
-        return role
+    profile_role = getattr(profile, 'role', None)
+    if profile_role:
+        return _normalize_role(profile_role)
 
-    # Superuser and staff fallbacks
     if user.is_superuser:
         return 'super_admin'
     if user.is_staff:
@@ -55,11 +70,11 @@ class IsStaffOrAbove(BasePermission):
         Super Admin, Admin, Manager, Staff
     """
 
-    allowed_roles = {'super_admin', 'admin', 'manager', 'staff'}
+    allowed_roles = {'super_admin', 'admin', 'manager', 'staff', 'superadmin'}
 
     def has_permission(self, request, view) -> bool:
         role = _get_user_role(request.user)
-        return role in self.allowed_roles
+        return role in self.allowed_roles or bool(request.user and request.user.is_staff)
 
 
 class IsSuperAdmin(BasePermission):

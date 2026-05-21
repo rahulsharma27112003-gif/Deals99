@@ -158,6 +158,8 @@ class Cart(models.Model):
 
     class Meta:
         unique_together = ['user', 'product']
+        ordering = ['-updated_at']
+        ordering = ['-updated_at']
 
     def __str__(self):
         return f"{self.user.username} - {self.product.name} x{self.quantity}"
@@ -174,6 +176,8 @@ class Wishlist(models.Model):
 
     class Meta:
         unique_together = ['user', 'product']
+        ordering = ['-created_at']
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.user.username} - {self.product.name}"
@@ -188,12 +192,19 @@ class Order(models.Model):
         ('cancelled', 'Cancelled'),
     ]
 
+    PAYMENT_METHOD_CHOICES = [
+        ('cod', 'Cash on Delivery'),
+        ('stripe', 'Stripe'),
+        ('razorpay', 'Razorpay'),
+        ('bank_transfer', 'Bank Transfer'),
+    ]
+
     user = models.ForeignKey(USER_MODEL, on_delete=models.CASCADE, related_name='orders')
     order_number = models.CharField(max_length=20, unique=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     shipping_address = models.TextField()
-    payment_method = models.CharField(max_length=50, default='cod')
+    payment_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, default='cod')
     payment_status = models.CharField(max_length=20, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -23,6 +23,7 @@ class OrderTestCase(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(
             username='testuser',
+            email='testuser@example.com',
             password='testpass123'
         )
         self.product = ProductFactory(price=99.99, stock=50)
@@ -106,6 +107,7 @@ class OrderTestCase(TestCase):
         """Test that admins can update order status"""
         admin_user = User.objects.create_user(
             username='admin',
+            email='admin@example.com',
             password='admin123',
             is_staff=True
         )
@@ -124,6 +126,7 @@ class OrderTestCase(TestCase):
         """Test updating order with invalid status"""
         admin_user = User.objects.create_user(
             username='admin',
+            email='admin@example.com',
             password='admin123',
             is_staff=True
         )

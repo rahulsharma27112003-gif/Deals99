@@ -86,6 +86,9 @@
         <button class="auto-btn btn-warning" onclick="runAutoUserTest()">Test User Functions</button>
         <button class="auto-btn btn-info" onclick="runAutoProductTest()">Test Product Functions</button>
         <button class="auto-btn btn-danger" onclick="runAutoNotificationTest()">Test Notifications</button>
+        <button class="auto-btn btn-info" onclick="runAutoPWATest()">Test PWA / Service Worker</button>
+        <button class="auto-btn btn-primary" onclick="runAutoSearchTest()">Test Client Search</button>
+        <button class="auto-btn btn-warning" onclick="runAutoPerformanceTest()">Test Lazy-load</button>
       </div>
     </div>
 
@@ -119,7 +122,7 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>
@@ -319,6 +322,91 @@
       }, 500);
     }
 
+    // Auto PWA / Service Worker Test
+    async function runAutoPWATest() {
+      addResult('🚀 Starting Auto PWA / Service Worker Test...', 'info');
+      totalTests += 3;
+
+      try {
+        if (!('serviceWorker' in navigator)) {
+          addResult('❌ Service Worker not supported in this browser', 'error');
+          return;
+        }
+
+        // Check registration
+        const reg = await navigator.serviceWorker.getRegistration('/service-worker.js');
+        if (reg) {
+          addResult('✅ Service worker file is registered', 'success');
+        } else {
+          addResult('⚠️ Service worker not registered (dev only)', 'warning');
+        }
+
+        // Check active controller
+        if (navigator.serviceWorker.controller) {
+          addResult('✅ Service worker controller is active', 'success');
+        } else {
+          addResult('⚠️ No active service worker controller', 'warning');
+        }
+
+        // Quick fetch check for /service-worker.js
+        try {
+          const resp = await fetch('/service-worker.js', { cache: 'no-store' });
+          if (resp.ok) addResult('✅ /service-worker.js reachable (HTTP 200)', 'success');
+          else addResult(`❌ /service-worker.js returned ${resp.status}`, 'error');
+        } catch (e) {
+          addResult(`❌ Failed to fetch /service-worker.js: ${e.message}`, 'error');
+        }
+      } catch (e) {
+        addResult(`❌ PWA test error: ${e.message}`, 'error');
+      }
+    }
+
+    // Auto Client Search Test
+    async function runAutoSearchTest() {
+      addResult('🚀 Starting Auto Client Search Test...', 'info');
+      totalTests += 3;
+
+      try {
+        const idxTs = (() => { try { return localStorage.getItem('deals99_search_index_ts'); } catch(e) { return null; } })();
+        if (idxTs) addResult('✅ Client search index timestamp exists in localStorage', 'success');
+        else addResult('⚠️ No search index timestamp found in localStorage', 'warning');
+
+        if (window.ProductManager && typeof window.ProductManager.searchProducts === 'function') {
+          const results = window.ProductManager.searchProducts('test');
+          addResult(`✅ ProductManager.searchProducts returned ${results.length} results`, 'success');
+        } else {
+          addResult('❌ ProductManager.searchProducts not available', 'error');
+        }
+
+        const input = document.getElementById('clientSearchInput');
+        if (input) addResult('✅ Client search input present on page', 'success');
+        else addResult('⚠️ Client search input not found on this page', 'warning');
+      } catch (e) {
+        addResult(`❌ Client search test error: ${e.message}`, 'error');
+      }
+    }
+
+    // Auto Performance / Lazy-load Test
+    function runAutoPerformanceTest() {
+      addResult('🚀 Starting Auto Performance / Lazy-load Test...', 'info');
+      totalTests += 3;
+
+      try {
+        const lazyImgs = document.querySelectorAll('img[loading="lazy"]');
+        if (lazyImgs.length) addResult(`✅ Found ${lazyImgs.length} images with loading="lazy"`, 'success');
+        else addResult('⚠️ No images with loading="lazy" found', 'warning');
+
+        const srcsetImgs = document.querySelectorAll('img[srcset]');
+        if (srcsetImgs.length) addResult(`✅ Found ${srcsetImgs.length} responsive images with srcset`, 'success');
+        else addResult('⚠️ No responsive images (srcset) found', 'warning');
+
+        if ('IntersectionObserver' in window) addResult('✅ IntersectionObserver supported (good for lazy-loading)', 'success');
+        else addResult('⚠️ IntersectionObserver not supported', 'warning');
+      } catch (e) {
+        addResult(`❌ Performance test error: ${e.message}`, 'error');
+      }
+    }
+
     // Demo Functions
     function addDemoProduct() {
       try {
@@ -442,6 +530,9 @@
         setTimeout(() => runAutoUserTest(), 2000);
         setTimeout(() => runAutoProductTest(), 3000);
         setTimeout(() => runAutoNotificationTest(), 4000);
+        setTimeout(() => runAutoPWATest(), 5200);
+        setTimeout(() => runAutoSearchTest(), 6400);
+        setTimeout(() => runAutoPerformanceTest(), 7600);
       }, 1000);
     });
   </script>

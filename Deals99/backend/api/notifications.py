@@ -30,7 +30,11 @@ class EmailNotificationService:
                 'total_amount': order.total_amount,
                 'items': order.items.all(),
                 'shipping_address': order.shipping_address,
-                'payment_method': order.get_payment_method_display(),
+                'payment_method': (
+                    order.get_payment_method_display()
+                    if hasattr(order, 'get_payment_method_display')
+                    else order.payment_method
+                ),
                 'site_url': settings.SITE_URL if hasattr(settings, 'SITE_URL') else 'http://localhost:8000',
             }
             

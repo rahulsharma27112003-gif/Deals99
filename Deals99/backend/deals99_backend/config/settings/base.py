@@ -59,7 +59,8 @@ ROOT_URLCONF = 'deals99_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # Serve the `Frontend/` static html during development so root (`/`) can render
+        'DIRS': [BASE_DIR.parent.parent / 'Frontend'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -205,6 +206,11 @@ LOGGING = {
 # Add AUTH_USER_MODEL for the new custom user
 AUTH_USER_MODEL = 'core.User'
 
+AUTHENTICATION_BACKENDS = [
+    'core.backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # Payment webhook secrets (configure in production environment)
 STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
 RAZORPAY_WEBHOOK_SECRET = config('RAZORPAY_WEBHOOK_SECRET', default='')
@@ -225,12 +231,12 @@ CACHES = {
     }
 }
 
-# During test runs (pytest) prefer in-memory cache to avoid requiring Redis locally.
+# Prefer in-memory cache for tests and when Redis is not explicitly enabled
 import sys
-if 'pytest' in sys.modules:
+if 'pytest' in sys.modules or 'test' in sys.argv or not config('USE_REDIS_CACHE', default=False, cast=bool):
     CACHES = {
         'default': {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache'
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         }
     }
 

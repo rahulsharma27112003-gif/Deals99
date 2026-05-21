@@ -370,7 +370,7 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
   
   <script>
     // Checkout functionality
@@ -601,53 +601,57 @@
         reviewContainer.innerHTML = reviewHTML;
       }
 
-      processOrder() {
+      async processOrder() {
         const submitBtn = document.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
         submitBtn.disabled = true;
 
-        // Simulate order processing
+        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cod';
+        const shipping_address = [
+          document.getElementById('firstName')?.value,
+          document.getElementById('lastName')?.value,
+          document.getElementById('address')?.value,
+          document.getElementById('city')?.value,
+          document.getElementById('state')?.value,
+          document.getElementById('pincode')?.value,
+        ].filter(Boolean).join(', ');
+
+        try {
+          const { createOrder, isAuthenticated } = await import('./api.js');
+          if (isAuthenticated()) {
+            const order = await createOrder({
+              shipping_address,
+              payment_method: paymentMethod === 'card' ? 'stripe' : 'cod',
+            });
+            localStorage.removeItem('cart');
+            this.showToast(`Order placed! ${order.order_number || order.id}`, 'success');
+            setTimeout(() => {
+              window.location.href = `order.html?orderId=${order.order_number || order.id}`;
+            }, 1500);
+            return;
+          }
+        } catch (err) {
+          console.warn('API checkout failed, using offline fallback', err);
+        }
+
+        const orderId = 'ORD' + Date.now();
+        const orderData = {
+          id: orderId,
+          items: this.cart,
+          shipping_address,
+          payment_method: paymentMethod,
+          status: 'pending',
+          orderDate: new Date().toISOString(),
+          total: this.calculateTotal(),
+        };
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+        orders.push(orderData);
+        localStorage.setItem('orders', JSON.stringify(orders));
+        localStorage.removeItem('cart');
+        this.showToast(`Order saved locally. Order ID: ${orderId}`, 'success');
         setTimeout(() => {
-          const orderId = 'ORD' + Date.now();
-          const orderData = {
-            id: orderId,
-            items: this.cart,
-            shipping: {
-              name: `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}`,
-              email: document.getElementById('email').value,
-              phone: document.getElementById('phone').value,
-              address: document.getElementById('address').value,
-              city: document.getElementById('city').value,
-              state: document.getElementById('state').value,
-              pincode: document.getElementById('pincode').value
-            },
-            payment: {
-              method: document.querySelector('input[name="paymentMethod"]:checked').value,
-              status: 'completed'
-            },
-            status: 'confirmed',
-            orderDate: new Date().toISOString(),
-            total: this.calculateTotal()
-          };
-
-        // Save order
-          let orders = JSON.parse(localStorage.getItem('orders') || '[]');
-          orders.push(orderData);
-          localStorage.setItem('orders', JSON.stringify(orders));
-
-          // Clear cart
-          localStorage.removeItem('cart');
-
-          // Show success message
-          this.showToast(`Order placed successfully! Order ID: ${orderId}`, 'success');
-
-          setTimeout(() => {
-            window.location.href = `order.html?orderId=${orderId}`;
-          }, 2000);
-
-        }, 3000);
+          window.location.href = `order.html?orderId=${orderId}`;
+        }, 1500);
       }
 
       calculateTotal() {
