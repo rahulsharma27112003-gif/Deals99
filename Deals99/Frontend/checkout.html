@@ -237,6 +237,7 @@
                   <div id="orderReview">
                     <!-- Order details will be loaded here -->
                   </div>
+                  <div id="onlinePaymentNotice" class="alert alert-info d-none mt-3" role="status"></div>
 
                   <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-outline-secondary" onclick="prevStep()">
@@ -377,14 +378,47 @@
     class CheckoutManager {
       constructor() {
         this.currentStep = 1;
-        this.cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        this.cart = [];
+        this.pendingPayment = null;
         this.init();
       }
 
-      init() {
+      async syncCart() {
+        let tries = 0;
+        while (!window.cartManager && tries++ < 100) {
+          await new Promise((r) => setTimeout(r, 50));
+        }
+        if (window.cartManager?.loadCartFromBackend) {
+          await window.cartManager.loadCartFromBackend();
+          this.cart = window.cartManager.items || [];
+        } else {
+          this.cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        }
+      }
+
+      async init() {
+        await this.syncCart();
         this.loadOrderSummary();
         this.setupEventListeners();
         this.updateProgress();
+        this.updateOnlinePaymentNotice();
+      }
+
+      updateOnlinePaymentNotice() {
+        const panel = document.getElementById('onlinePaymentNotice');
+        if (!panel) return;
+        const method = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+        if (method === 'card') {
+          panel.classList.remove('d-none');
+          panel.textContent =
+            'Card payments use Stripe. After placing your order, you will receive a payment intent to complete checkout (requires STRIPE_SECRET_KEY on the server).';
+        } else if (method === 'upi') {
+          panel.classList.remove('d-none');
+          panel.textContent =
+            'UPI payments use Razorpay. An order will be created and a Razorpay order id returned when configured.';
+        } else {
+          panel.classList.add('d-none');
+        }
       }
 
       loadOrderSummary() {
@@ -469,6 +503,7 @@
             } else {
               cardDetails.style.display = 'none';
             }
+            this.updateOnlinePaymentNotice();
           });
         });
 
@@ -607,6 +642,8 @@
         submitBtn.disabled = true;
 
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cod';
+        const apiPaymentMethod =
+          paymentMethod === 'card' ? 'stripe' : paymentMethod === 'upi' ? 'razorpay' : 'cod';
         const shipping_address = [
           document.getElementById('firstName')?.value,
           document.getElementById('lastName')?.value,
@@ -617,27 +654,49 @@
         ].filter(Boolean).join(', ');
 
         try {
-          const { createOrder, createPaymentIntent, isAuthenticated } = await import('./api.js');
+          const { createOrder, createPaymentIntent, verifyPayment, isAuthenticated } = await import('./api.js');
           if (isAuthenticated()) {
-            const apiPaymentMethod =
-              paymentMethod === 'card' ? 'stripe' : paymentMethod === 'upi' ? 'razorpay' : 'cod';
             const order = await createOrder({
               shipping_address,
               payment_method: apiPaymentMethod,
             });
             localStorage.removeItem('cart');
+            if (window.cartManager) {
+              window.cartManager.items = [];
+              window.cartManager.updateCartCount();
+            }
             let paymentNote = '';
             if (apiPaymentMethod === 'stripe' || apiPaymentMethod === 'razorpay') {
               try {
                 const intent = await createPaymentIntent(order.id, apiPaymentMethod);
                 if (intent.client_secret) {
-                  paymentNote = ' Complete card payment in Stripe checkout.';
+                  sessionStorage.setItem(
+                    'deals99_pending_payment',
+                    JSON.stringify({
+                      order_id: order.id,
+                      order_number: order.order_number,
+                      payment_method: 'stripe',
+                      client_secret: intent.client_secret,
+                      payment_intent_id: intent.payment_intent_id,
+                    })
+                  );
+                  paymentNote = ' Stripe payment intent created — complete payment on the orders page.';
                 } else if (intent.razorpay_order_id) {
-                  paymentNote = ` Razorpay order: ${intent.razorpay_order_id}.`;
+                  sessionStorage.setItem(
+                    'deals99_pending_payment',
+                    JSON.stringify({
+                      order_id: order.id,
+                      order_number: order.order_number,
+                      payment_method: 'razorpay',
+                      razorpay_order_id: intent.razorpay_order_id,
+                      razorpay_key_id: intent.razorpay_key_id,
+                    })
+                  );
+                  paymentNote = ` Razorpay order ${intent.razorpay_order_id} created.`;
                 }
               } catch (payErr) {
                 console.warn('Payment intent not created', payErr);
-                paymentNote = ' (Online payment setup pending — pay via COD or retry.)';
+                paymentNote = ' (Online payment not configured — order saved; use COD or contact support.)';
               }
             }
             this.showToast(`Order placed! ${order.order_number || order.id}${paymentNote}`, 'success');

@@ -318,11 +318,22 @@ class WishlistManager {
 
     try {
       const wishlistData = await fetchWishlist();
-      this.items = wishlistData.map(item => ({
+      const rows = Array.isArray(wishlistData) ? wishlistData : [];
+      this.items = rows.map((item) => ({
         id: item.id,
+        wishlist_id: item.id,
+        product_id: item.product?.id,
+        name: item.product?.name,
+        price: item.product?.price,
+        mrp: item.product?.mrp,
+        img: item.product?.primary_image,
+        desc: item.product?.description || '',
+        category: item.product?.category_name,
+        stock: item.product?.stock,
         product: item.product,
-        addedAt: item.created_at
+        addedAt: item.created_at,
       }));
+      StorageManager.set(CONFIG.STORAGE_KEYS.WISHLIST, this.items);
     } catch (error) {
       console.error('Failed to load wishlist from backend:', error);
       this.items = StorageManager.get(CONFIG.STORAGE_KEYS.WISHLIST);
@@ -333,7 +344,12 @@ class WishlistManager {
     try {
       if (isAuthenticated()) {
         // Add to backend
-        await addToWishlist(product.id || product.product?.id);
+        const pid = product.id || product.product_id || product.product?.id;
+        if (!pid) {
+          NotificationManager.show('Product id required for wishlist', 'error');
+          return false;
+        }
+        await addToWishlist(pid);
         await this.loadWishlistFromBackend();
       } else {
         // Fallback to localStorage
@@ -364,8 +380,8 @@ class WishlistManager {
 
       this.updateWishlistCount();
       this.updateWishlistUI();
-      
-  NotificationManager.show('Added to wishlist: ' + product.name, 'success');
+      this.notifyWishlistUpdated();
+      NotificationManager.show('Added to wishlist: ' + product.name, 'success');
       return true;
     } catch (error) {
       console.error('WishlistManager: Error adding item:', error);
@@ -388,6 +404,7 @@ class WishlistManager {
       
       this.updateWishlistCount();
       this.updateWishlistUI();
+      this.notifyWishlistUpdated();
       NotificationManager.show('Item removed from wishlist', 'info');
       return true;
     } catch (error) {
@@ -396,19 +413,34 @@ class WishlistManager {
     }
   }
 
-  clearWishlist() {
+  async clearWishlist() {
     try {
-      this.items = [];
-      StorageManager.set(CONFIG.STORAGE_KEYS.WISHLIST, this.items);
+      if (isAuthenticated()) {
+        const snapshot = [...this.items];
+        for (const item of snapshot) {
+          if (item.id) {
+            await removeFromWishlist(item.id);
+          }
+        }
+        await this.loadWishlistFromBackend();
+      } else {
+        this.items = [];
+        StorageManager.set(CONFIG.STORAGE_KEYS.WISHLIST, this.items);
+      }
       this.updateWishlistCount();
       this.updateWishlistUI();
-      
+      this.notifyWishlistUpdated();
       NotificationManager.show('Wishlist cleared', 'info');
       return true;
     } catch (error) {
       console.error('WishlistManager: Error clearing wishlist:', error);
+      NotificationManager.show('Failed to clear wishlist', 'error');
       return false;
     }
+  }
+
+  notifyWishlistUpdated() {
+    document.dispatchEvent(new CustomEvent('wishlist:updated', { detail: { items: this.items } }));
   }
 
   getWishlistCount() {
@@ -470,27 +502,10 @@ class WishlistManager {
   }
 
   getProductFromButton(button) {
-    try {
-      const productName = button.getAttribute('data-name') || button.querySelector('.product-name')?.textContent;
-      const productPrice = button.getAttribute('data-price') || button.querySelector('.product-price')?.textContent;
-      const productImg = button.getAttribute('data-img') || button.querySelector('.product-img')?.src;
-      const productDesc = button.getAttribute('data-desc') || button.querySelector('.product-desc')?.textContent;
-      const productCategory = button.getAttribute('data-category') || 'General';
-
-      if (productName) {
-        return {
-          name: productName,
-          price: parseFloat(productPrice?.replace(/[^\d.]/g, '')) || 0,
-          img: productImg,
-          desc: productDesc,
-          category: productCategory
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('WishlistManager: Error getting product data:', error);
-      return null;
+    if (window.cartManager?.getProductFromButton) {
+      return window.cartManager.getProductFromButton(button);
     }
+    return null;
   }
 }
 
