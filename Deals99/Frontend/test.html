@@ -29,26 +29,11 @@
   </style>
 </head>
 <body>
-  <!-- Test Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">
-        <i class="fas fa-tags"></i> Deals99 Test Suite
-      </a>
-      <div class="d-flex align-items-center" id="authArea"></div>
-      <div class="d-flex align-items-center ms-3">
-        <a href="cart.html" class="me-3" title="Cart">
-          <i class="fas fa-shopping-cart"></i>
-          <span id="cartCount" class="badge bg-danger ms-1" style="display:none;">0</span>
-        </a>
-        <a href="wishlist.html" class="me-3" title="Wishlist">
-          <i class="fas fa-heart"></i>
-        </a>
-      </div>
-    </div>
-  </nav>
+  <div id="site-header" data-active="test"></div>
+  <main class="site-main">
 
-  <!-- Test Content -->
+  <!-- Test Navigation -->
+<!-- Test Content -->
   <div class="container py-5">
     <h1 class="section-title">Deals99 Comprehensive Test Suite</h1>
     
@@ -198,7 +183,10 @@
     </div>
   </div>
 
-  <script type="module" src="script.js"></script>
+    </main>
+  <div id="site-footer"></div>
+<script type="module" src="script.js"></script>
+  <script type="module" src="components/layout.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
   
   <script>

@@ -1492,7 +1492,13 @@ class EventHandlers {
 }
 
 // ===== INITIALIZATION =====
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('layout:ready', function() {
+    if (window.userManager) window.userManager.renderAuthArea();
+    if (window.cartManager) window.cartManager.updateCartCount();
+    if (window.wishlistManager) window.wishlistManager.updateWishlistCount();
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
       // Initialize all managers
     window.cartManager = new CartManager();
     window.wishlistManager = new WishlistManager();

@@ -146,8 +146,16 @@ function bindFilters() {
   document.getElementById('searchBox')?.addEventListener('input', filterProducts);
 }
 
+function applySearchFromUrl() {
+  const q = new URLSearchParams(window.location.search).get('search');
+  if (!q) return;
+  const box = document.getElementById('searchBox');
+  if (box) box.value = q;
+}
+
 async function init() {
   bindFilters();
+  applySearchFromUrl();
   await populateCategoryFilter();
   await loadProducts();
 }

@@ -571,6 +571,27 @@ p {
   height: auto;
 }
 
+/* ===== SHARED LAYOUT ===== */
+.site-navbar {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  background: var(--bg-primary, #fff) !important;
+}
+
+.site-main {
+  min-height: 50vh;
+}
+
+#site-header:empty,
+#site-footer:empty {
+  display: none;
+}
+
+body > .site-main,
+body > main.site-main,
+body > .container.site-main {
+  flex: 1;
+}
+
 /* ===== FOOTER ===== */
 .footer {
   background-color: var(--bg-secondary);
