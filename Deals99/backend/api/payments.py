@@ -228,16 +228,17 @@ class RazorpayPaymentProcessor:
             # Razorpay expects amount in paise (cents)
             amount_paise = int(float(order.total_amount) * 100)
 
-            razorpay_order = client.order.create(
-                amount=amount_paise,
-                currency='INR',
-                payment_capture=1,
-                notes={
-                    'order_id': order.id,
-                    'order_number': order.order_number,
-                    'customer_email': order.user.email,
-                }
-            )
+            razorpay_order = client.order.create({
+                'amount': amount_paise,
+                'currency': 'INR',
+                'payment_capture': 1,
+                'receipt': str(order.order_number),
+                'notes': {
+                    'order_id': str(order.id),
+                    'order_number': str(order.order_number),
+                    'customer_email': getattr(order.user, 'email', ''),
+                },
+            })
 
             logger.info(f"Razorpay order created for order {order.order_number}: {razorpay_order['id']}")
 
