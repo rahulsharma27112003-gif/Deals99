@@ -89,3 +89,25 @@ class AdminOrderStatusUpdateTests(APITestCase):
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, 'shipped')
 
+    def test_admin_can_manage_user_detail(self):
+        user = User.objects.create_user(
+            email='testuser@example.com',
+            password='pass1234',
+        )
+        self.client.force_authenticate(user=self.manager)
+        detail_url = f'/api/admin/users/{user.id}/'
+
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['data']['email'], user.email)
+
+        response = self.client.patch(detail_url, {'is_active': False})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.refresh_from_db()
+        self.assertFalse(user.is_active)
+
+        response = self.client.delete(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        with self.assertRaises(User.DoesNotExist):
+            User.objects.get(pk=user.id)
+

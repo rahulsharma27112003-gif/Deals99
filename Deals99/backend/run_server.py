@@ -15,5 +15,5 @@ if __name__ == '__main__':
     # Create logs directory if it doesn't exist
     os.makedirs('logs', exist_ok=True)
     
-    # Run the development server
-    execute_from_command_line(['manage.py', 'runserver', '0.0.0.0:8000'])
+    # Run the development server on localhost for local development
+    execute_from_command_line(['manage.py', 'runserver', 'localhost:8000'])

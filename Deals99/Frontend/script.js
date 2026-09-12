@@ -6,7 +6,9 @@ import {
   fetchDeals, fetchCategories, fetchCart, addToCart, removeFromCart, updateCartItem, clearCart,
   fetchWishlist, addToWishlist, removeFromWishlist, createOrder,
   fetchOrders, isAuthenticated, getCurrentUser, setCurrentUser,
-  fetchUsers, updateUser, deleteUser
+  fetchUsers, updateUser, deleteUser,
+  addProduct, updateProduct, deleteProduct,
+  updateOrderStatus, deleteOrder
 } from './api.js';
 
 // ===== GLOBAL CONFIGURATION =====
@@ -30,8 +32,10 @@ export const CONFIG = {
   MAX_CART_ITEMS: 50,
   MAX_WISHLIST_ITEMS: 100,
   API_BASE: (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:'))
-    ? `${window.location.origin}/api`
-    : 'http://localhost:8000/api'
+    ? ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://127.0.0.1:8000/api'
+        : `${window.location.origin}/api`)
+    : 'http://127.0.0.1:8000/api'
 };
 
 // ===== STORAGE MANAGER =====
@@ -96,6 +100,7 @@ class CartManager {
     }
 
     try {
+      console.debug('CartManager: loading cart from backend...');
       const cartData = await fetchCart();
       const rows = Array.isArray(cartData) ? cartData : [];
       this.items = rows.map(item => ({
@@ -110,6 +115,8 @@ class CartManager {
         total_price: item.total_price,
         addedAt: item.created_at
       }));
+      this.mergeLocalCartItems();
+      console.debug('CartManager: items after backend+merge', this.items);
       StorageManager.set(CONFIG.STORAGE_KEYS.CART, this.items);
     } catch (error) {
       console.error('Failed to load cart from backend:', error);
@@ -117,9 +124,35 @@ class CartManager {
     }
   }
 
+  mergeLocalCartItems() {
+    if (!isAuthenticated()) return;
+
+    const localItems = StorageManager.get(CONFIG.STORAGE_KEYS.CART) || [];
+    if (!Array.isArray(localItems) || localItems.length === 0) return;
+
+    const existingKeys = new Set(
+      this.items.map((item) => String(item.product_id ?? item.id ?? item.name))
+    );
+
+    localItems.forEach((localItem) => {
+      const key = String(localItem.product_id ?? localItem.id ?? localItem.name);
+      if (!key) return;
+      if (!existingKeys.has(key)) {
+        this.items.push({
+          ...localItem,
+          qty: localItem.qty || localItem.quantity || 1,
+          quantity: localItem.quantity || localItem.qty || 1,
+        });
+        existingKeys.add(key);
+      }
+    });
+    console.debug('CartManager: merged local items, result count', this.items.length);
+  }
+
   async addItem(product) {
     try {
       const productId = product.id || product.product_id || product.product?.id;
+      console.debug('CartManager.addItem called', { product, productId, isAuth: isAuthenticated() });
       if (isAuthenticated() && productId) {
         await addToCart(productId, product.qty || product.quantity || 1);
         await this.loadCartFromBackend();
@@ -146,6 +179,7 @@ class CartManager {
       }
       this.updateCartCount();
       this.notifyCartUpdated();
+      console.debug('CartManager: addItem completed, items now', this.items);
       NotificationManager.show(`Added to cart: ${product.name}`, 'success');
       return true;
     } catch (error) {
@@ -157,10 +191,11 @@ class CartManager {
 
   async updateQuantity(productId, newQty) {
     const qty = Math.max(1, Math.min(10, parseInt(newQty, 10) || 1));
+    const key = String(productId);
     try {
       if (isAuthenticated()) {
         const line = this.items.find(
-          (item) => item.id === productId || item.product_id === productId || item.name === productId
+          (item) => String(item.id) === key || String(item.product_id) === key || String(item.name) === key
         );
         if (line?.id) {
           await updateCartItem(line.id, qty);
@@ -168,7 +203,7 @@ class CartManager {
         }
       } else {
         const line = this.items.find(
-          (item) => item.id === productId || item.name === productId
+          (item) => String(item.id) === key || String(item.name) === key
         );
         if (line) {
           line.qty = qty;
@@ -186,10 +221,11 @@ class CartManager {
   }
 
   async removeItem(productId) {
+    const key = String(productId);
     try {
       if (isAuthenticated()) {
         const line = this.items.find(
-          (item) => item.id === productId || item.product_id === productId || item.name === productId
+          (item) => String(item.id) === key || String(item.product_id) === key || String(item.name) === key
         );
         if (line?.id) {
           await removeFromCart(line.id);
@@ -197,7 +233,7 @@ class CartManager {
         }
       } else {
         this.items = this.items.filter(
-          (item) => item.id !== productId && item.name !== productId
+          (item) => String(item.id) !== key && String(item.name) !== key
         );
         StorageManager.set(CONFIG.STORAGE_KEYS.CART, this.items);
       }
@@ -215,12 +251,24 @@ class CartManager {
     return this.items.reduce((sum, item) => sum + (item.qty || item.quantity || 1), 0);
   }
 
+  getCart() {
+    return this.items;
+  }
+
+  async addToCart(product) {
+    return this.addItem(product);
+  }
+
   getCartTotal() {
     return this.items.reduce((sum, item) => {
       const price = parseFloat(item.price || item.discounted || item.mrp || 0);
       const qty = item.qty || item.quantity || 1;
       return sum + price * qty;
     }, 0);
+  }
+
+  async removeFromCart(productId) {
+    return this.removeItem(productId);
   }
 
   async clearCart() {
@@ -443,6 +491,23 @@ class WishlistManager {
     document.dispatchEvent(new CustomEvent('wishlist:updated', { detail: { items: this.items } }));
   }
 
+  getWishlist() {
+    return this.items;
+  }
+
+  async addToWishlist(product) {
+    return this.addItem(product);
+  }
+
+  isInWishlist(productIdOrName) {
+    if (!productIdOrName) return false;
+    return this.items.some((item) => item.id === productIdOrName || item.product_id === productIdOrName || item.name === productIdOrName);
+  }
+
+  async removeFromWishlist(productId) {
+    return this.removeItem(productId);
+  }
+
   getWishlistCount() {
     return this.items.length;
   }
@@ -528,6 +593,11 @@ class UserManager {
       setCurrentUser(response.user);
       localStorage.setItem('isLoggedIn', 'true');
       this.renderAuthArea();
+      if (window.cartManager?.loadCartFromBackend) {
+        await window.cartManager.loadCartFromBackend();
+        window.cartManager.updateCartCount();
+        window.cartManager.notifyCartUpdated();
+      }
       
   NotificationManager.show('Welcome back, ' + (response.user.first_name || response.user.username) + '!', 'success');
       return true;
@@ -546,6 +616,11 @@ class UserManager {
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('isAdminLoggedIn');
       this.renderAuthArea();
+      if (window.cartManager) {
+        window.cartManager.items = [];
+        window.cartManager.updateCartCount();
+        window.cartManager.notifyCartUpdated();
+      }
       
       NotificationManager.show('Logged out successfully', 'info');
       return true;
@@ -562,6 +637,11 @@ class UserManager {
       setCurrentUser(response.user);
       localStorage.setItem('isLoggedIn', 'true');
       this.renderAuthArea();
+      if (window.cartManager?.loadCartFromBackend) {
+        await window.cartManager.loadCartFromBackend();
+        window.cartManager.updateCartCount();
+        window.cartManager.notifyCartUpdated();
+      }
       
   NotificationManager.show('Welcome to Deals99, ' + (response.user.first_name || response.user.username) + '!', 'success');
       return true;
@@ -577,20 +657,85 @@ class UserManager {
   }
 
   isAdmin() {
-    return localStorage.getItem('isAdminLoggedIn') === 'true';
+    const user = this.currentUser || getCurrentUser();
+    if (!user) return false;
+    const role = String(user.role || user.user_role || '').toLowerCase().replace(/[-_\s]+/g, '_');
+    return !!(
+      user.is_superuser ||
+      user.is_staff ||
+      ['super_admin', 'superadmin', 'admin', 'manager', 'staff'].includes(role)
+    );
+  }
+
+  getCurrentUser() {
+    return this.currentUser || getCurrentUser();
   }
 
   renderAuthArea() {
     const authArea = document.getElementById('authArea');
     if (!authArea) return;
+
     if (this.isAdmin()) {
-      authArea.textContent = 'Admin logged in';
-    } else if (this.isLoggedIn()) {
-      const user = this.currentUser || {};
-  authArea.textContent = 'Logged in as: ' + (user.name || user.email || 'User');
-    } else {
-      authArea.textContent = 'Not logged in';
+      authArea.innerHTML = `
+        <div class="dropdown">
+          <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-user-shield"></i> Admin
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="admin.html"><i class="fas fa-tools me-2"></i>Admin Panel</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><button class="dropdown-item text-danger" type="button" id="adminLogoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Logout</button></li>
+          </ul>
+        </div>
+      `;
+      const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+      if (adminLogoutBtn) {
+        adminLogoutBtn.addEventListener('click', async () => {
+          try {
+            logoutUser();
+          } finally {
+            this.currentUser = null;
+            setCurrentUser(null);
+            localStorage.removeItem('isAdminLoggedIn');
+            localStorage.removeItem('access_token');
+            window.location.href = 'index.html';
+          }
+        });
+      }
+      return;
     }
+
+    if (this.isLoggedIn()) {
+      const user = this.currentUser || getCurrentUser() || {};
+      const displayName = user.name || user.first_name || user.email || 'User';
+      authArea.innerHTML = `
+        <div class="dropdown">
+          <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-user-circle"></i> ${displayName}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i>Profile</a></li>
+            <li><a class="dropdown-item" href="account.html"><i class="fas fa-cog me-2"></i>Settings</a></li>
+            <li><a class="dropdown-item" href="order.html"><i class="fas fa-box me-2"></i>Orders</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><button class="dropdown-item text-danger" type="button" id="userLogoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Logout</button></li>
+          </ul>
+        </div>
+      `;
+      const userLogoutBtn = document.getElementById('userLogoutBtn');
+      if (userLogoutBtn) {
+        userLogoutBtn.addEventListener('click', async () => {
+          await this.logout();
+          window.location.href = 'index.html';
+        });
+      }
+      return;
+    }
+
+    authArea.innerHTML = `
+      <a href="login.html" class="btn btn-outline-primary btn-sm">Login</a>
+      <a href="register.html" class="btn btn-primary btn-sm">Register</a>
+    `;
   }
 
   setupEventListeners() {
@@ -1017,7 +1162,7 @@ class ProductManager {
         name: p.name,
         price,
         mrp: parseFloat(p.mrp) || price,
-        img: p.img || p.primary_image || 'https://via.placeholder.com/100?text=Deal',
+        img: p.img || p.primary_image || 'favicon.svg',
         desc: p.desc || p.description || '',
         category: p.category_name || p.category || 'General',
         stock: typeof p.stock === 'number' ? p.stock : 1,
@@ -1075,6 +1220,25 @@ class ProductManager {
     });
   }
 
+  static getAllProducts() {
+    const liveProducts = StorageManager.get(CONFIG.STORAGE_KEYS.LIVE_PRODUCTS);
+    if (Array.isArray(liveProducts) && liveProducts.length) return liveProducts;
+    const arrivals = StorageManager.get(CONFIG.STORAGE_KEYS.ARRIVALS);
+    return Array.isArray(arrivals) ? arrivals : [];
+  }
+
+  static getProductByName(name) {
+    if (!name) return null;
+    return this.getAllProducts().find((p) => (p.name || '').toLowerCase().includes(String(name).toLowerCase()));
+  }
+
+  static searchProducts(query) {
+    if (window.productManager?.searchProducts) {
+      return window.productManager.searchProducts(query);
+    }
+    return [];
+  }
+
   static mapApiProduct(p) {
     const price = parseFloat(p.price) || 0;
     const mrp = parseFloat(p.mrp) || price;
@@ -1090,7 +1254,7 @@ class ProductManager {
       mrp,
       category: categorySlug,
       category_name: p.category_name,
-      img: p.primary_image || 'https://via.placeholder.com/100?text=Product',
+      img: p.primary_image || 'favicon.svg',
       badge: p.featured ? 'Featured' : (p.discount_percentage > 0 ? `${Math.round(p.discount_percentage)}% OFF` : 'Deal'),
       stock: typeof p.stock === 'number' ? p.stock : 0,
       featured: p.featured,
@@ -1292,16 +1456,6 @@ class RecentlyViewedManager {
         return text;
       }).join('\n');
       container.textContent = productsText;
-
-    // Plain text rendering for recently viewed
-    const productsText = this.items.slice(0, 4).map(product => {
-      let text = 'Product: ' + product.name + '\n';
-      text += 'Price: Rs.' + (product.price || product.discounted || product.mrp || 0) + '\n';
-      text += 'Category: ' + (product.category || 'General') + '\n';
-      text += '---';
-      return text;
-    }).join('\n');
-    container.textContent = productsText;
   }
 
   setupEventListeners() {
@@ -1509,6 +1663,11 @@ document.addEventListener('layout:ready', function() {
     window.recentlyViewedManager = new RecentlyViewedManager();
     window.countdownManager = new CountdownManager(); // Initialize countdown manager
     
+    // Expose backwards-compatible instance aliases for demo and test pages
+    window.CartManager = window.cartManager;
+    window.WishlistManager = window.wishlistManager;
+    window.UserManager = window.userManager;
+
     // Initialize event handlers
     EventHandlers.init();
 
@@ -1533,6 +1692,10 @@ document.addEventListener('layout:ready', function() {
           if (!window.recentlyViewedManager) { window.recentlyViewedManager = new RecentlyViewedManager(); created.push('recentlyViewedManager'); }
           if (!window.countdownManager) { window.countdownManager = new CountdownManager(); created.push('countdownManager'); }
 
+          window.CartManager = window.cartManager;
+          window.WishlistManager = window.wishlistManager;
+          window.UserManager = window.userManager;
+
           if (created.length) {
             console.info('ensureGlobalManagers: created →', created.join(', '));
           }
@@ -1550,6 +1713,10 @@ document.addEventListener('layout:ready', function() {
               if (!window.darkModeManager) window.darkModeManager = new DarkModeManager();
               if (!window.recentlyViewedManager) window.recentlyViewedManager = new RecentlyViewedManager();
               if (!window.countdownManager) window.countdownManager = new CountdownManager();
+
+              window.CartManager = window.cartManager;
+              window.WishlistManager = window.wishlistManager;
+              window.UserManager = window.userManager;
               console.info('ensureGlobalManagers: initialized after DOMContentLoaded');
             } catch (err2) {
               console.error('ensureGlobalManagers: failed on retry', err2 && err2.message);
@@ -1569,7 +1736,7 @@ document.addEventListener('layout:ready', function() {
     (async function registerServiceWorker() {
       if ('serviceWorker' in navigator && location.protocol !== 'file:') {
         try {
-          const registration = await navigator.serviceWorker.register('/service-worker.js');
+          const registration = await navigator.serviceWorker.register('./service-worker.js');
           console.info('ServiceWorker registered:', registration.scope);
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
@@ -1611,7 +1778,7 @@ document.addEventListener('layout:ready', function() {
               resultsContainer.innerHTML = `<div class="card p-3">No results for "${q}"</div>`;
               return;
             }
-            resultsContainer.innerHTML = '<div class="row g-3">' + matches.map(p => `\n<div class="col-12 col-md-6">\n<div class="card p-3 d-flex gap-2">\n  <div class="d-flex gap-3">\n    <img src="${p.img || 'https://via.placeholder.com/100'}" loading="lazy" style="width:80px;height:80px;object-fit:contain;">\n    <div>\n      <div class="fw-bold">${p.name}</div>\n      <div class="text-muted">₹${p.price || p.mrp || 'N/A'}</div>\n      <div style=\"font-size:.85rem;color:var(--text-muted)\">${(p.desc||'').slice(0,80)}</div>\n    </div>\n  </div>\n</div>\n</div>`).join('') + '\n</div>';
+            resultsContainer.innerHTML = '<div class="row g-3">' + matches.map(p => `\n<div class="col-12 col-md-6">\n<div class="card p-3 d-flex gap-2">\n  <div class="d-flex gap-3">\n    <img src="${p.img || 'favicon.svg'}" loading="lazy" style="width:80px;height:80px;object-fit:contain;">\n    <div>\n      <div class="fw-bold">${p.name}</div>\n      <div class="text-muted">₹${p.price || p.mrp || 'N/A'}</div>\n      <div style=\"font-size:.85rem;color:var(--text-muted)\">${(p.desc||'').slice(0,80)}</div>\n    </div>\n  </div>\n</div>\n</div>`).join('') + '\n</div>';
           }, 180);
         });
       } catch (err) {
@@ -1655,7 +1822,6 @@ window.prevStep = function() {
 };
 
 // ===== ADMIN PANEL PRODUCT MANAGEMENT =====
-import { addProduct, updateProduct, deleteProduct, fetchProducts } from './api.js';
 
 function showAddProductModal() {
   document.getElementById('modalTitle').textContent = 'Add New Product';
@@ -1754,7 +1920,6 @@ async function loadProducts() {
 }
 
 // ===== ADMIN PANEL ORDER MANAGEMENT =====
-import { fetchOrders, updateOrderStatus, deleteOrder } from './api.js';
 
 async function loadOrders() {
   const ordersList = document.getElementById('ordersList');

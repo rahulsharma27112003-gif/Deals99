@@ -9,6 +9,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="global.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body class="bg-light">
   <div id="site-header" data-active="checkout"></div>
@@ -81,12 +82,6 @@
                       <label for="state" class="form-label">State *</label>
                       <select class="form-select" id="state" required>
                         <option value="">Select State</option>
-                        <option value="AP">Andhra Pradesh</option>
-                        <option value="DL">Delhi</option>
-                        <option value="KA">Karnataka</option>
-                        <option value="MH">Maharashtra</option>
-                        <option value="TN">Tamil Nadu</option>
-                        <option value="UP">Uttar Pradesh</option>
                       </select>
                       <div class="invalid-feedback">Please select your state.</div>
                     </div>
@@ -98,7 +93,7 @@
                   </div>
 
                   <div class="d-flex justify-content-end">
-                    <button type="button" class="btn btn-primary" onclick="nextStep()">
+                    <button type="button" class="btn btn-primary" id="step1NextBtn">
                       Next <i class="fas fa-arrow-right ms-2"></i>
                     </button>
                   </div>
@@ -184,10 +179,10 @@
                   </div>
 
                   <div class="d-flex justify-content-between">
-                    <button type="button" class="btn btn-outline-secondary" onclick="prevStep()">
+                    <button type="button" class="btn btn-outline-secondary" id="step2PrevBtn">
                       <i class="fas fa-arrow-left me-2"></i>Previous
                     </button>
-                    <button type="button" class="btn btn-primary" onclick="nextStep()">
+                    <button type="button" class="btn btn-primary" id="step2NextBtn">
                       Next <i class="fas fa-arrow-right ms-2"></i>
                     </button>
                   </div>
@@ -205,7 +200,7 @@
                   <div id="onlinePaymentNotice" class="alert alert-info d-none mt-3" role="status"></div>
 
                   <div class="d-flex justify-content-between">
-                    <button type="button" class="btn btn-outline-secondary" onclick="prevStep()">
+                    <button type="button" class="btn btn-outline-secondary" id="step3PrevBtn">
                       <i class="fas fa-arrow-left me-2"></i>Previous
                     </button>
                     <button type="submit" class="btn btn-success btn-lg">
@@ -219,8 +214,8 @@
         </div>
 
         <!-- Order Summary -->
-        <div class="col-lg-4">
-          <div class="card shadow border-0 sticky-top" style="top: 100px;">
+        <div class="col-lg-4 d-flex">
+          <div class="card shadow border-0 checkout-summary-card" style="top: 100px;">
             <div class="card-header bg-success text-white">
               <h5 class="mb-0">
                 <i class="fas fa-shopping-bag me-2"></i>Order Summary
@@ -235,9 +230,9 @@
                   <input type="text" class="form-control" id="promoCode" placeholder="Enter promo code">
                   <button class="btn btn-outline-primary" type="button" id="applyPromoBtn">Apply</button>
                 </div>
-                <div id="promoFeedback" class="form-text text-success"></div>
+                <div id="promoFeedback" class="form-text text-success promo-feedback"></div>
               </div>
-              <div id="orderSummary">
+              <div id="orderSummary" class="order-summary">
                 <!-- Order summary will be loaded here -->
               </div>
             </div>
@@ -305,6 +300,44 @@
         this.currentStep = 1;
         this.cart = [];
         this.pendingPayment = null;
+        this.states = [
+          { code: 'AN', name: 'Andaman and Nicobar Islands' },
+          { code: 'AP', name: 'Andhra Pradesh' },
+          { code: 'AR', name: 'Arunachal Pradesh' },
+          { code: 'AS', name: 'Assam' },
+          { code: 'BR', name: 'Bihar' },
+          { code: 'CG', name: 'Chhattisgarh' },
+          { code: 'CH', name: 'Chandigarh' },
+          { code: 'DN', name: 'Dadra and Nagar Haveli and Daman and Diu' },
+          { code: 'DL', name: 'Delhi' },
+          { code: 'GA', name: 'Goa' },
+          { code: 'GJ', name: 'Gujarat' },
+          { code: 'HR', name: 'Haryana' },
+          { code: 'HP', name: 'Himachal Pradesh' },
+          { code: 'JK', name: 'Jammu and Kashmir' },
+          { code: 'JH', name: 'Jharkhand' },
+          { code: 'KA', name: 'Karnataka' },
+          { code: 'KL', name: 'Kerala' },
+          { code: 'LA', name: 'Ladakh' },
+          { code: 'LD', name: 'Lakshadweep' },
+          { code: 'MH', name: 'Maharashtra' },
+          { code: 'ML', name: 'Meghalaya' },
+          { code: 'MN', name: 'Manipur' },
+          { code: 'MP', name: 'Madhya Pradesh' },
+          { code: 'MZ', name: 'Mizoram' },
+          { code: 'NL', name: 'Nagaland' },
+          { code: 'OR', name: 'Odisha' },
+          { code: 'PB', name: 'Punjab' },
+          { code: 'PY', name: 'Puducherry' },
+          { code: 'RJ', name: 'Rajasthan' },
+          { code: 'SK', name: 'Sikkim' },
+          { code: 'TG', name: 'Telangana' },
+          { code: 'TN', name: 'Tamil Nadu' },
+          { code: 'TR', name: 'Tripura' },
+          { code: 'UT', name: 'Uttarakhand' },
+          { code: 'UP', name: 'Uttar Pradesh' },
+          { code: 'WB', name: 'West Bengal' },
+        ];
         this.init();
       }
 
@@ -322,11 +355,24 @@
       }
 
       async init() {
+        this.populateStates();
+        this.prefillPromoCode();
         await this.syncCart();
         this.loadOrderSummary();
         this.setupEventListeners();
         this.updateProgress();
         this.updateOnlinePaymentNotice();
+      }
+
+      prefillPromoCode() {
+        const promoInput = document.getElementById('promoCode');
+        if (promoInput) {
+          promoInput.value = localStorage.getItem('appliedPromoCode') || '';
+        }
+      }
+
+      formatCurrency(value) {
+        return `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       }
 
       updateOnlinePaymentNotice() {
@@ -371,13 +417,22 @@
         // Promo code logic
         let promoCode = localStorage.getItem('appliedPromoCode') || '';
         let discount = 0;
-        if (promoCode === 'DEALS10') {
+        if (promoCode === 'DEALS10' || promoCode === 'WELCOME10') {
           discount = subtotal * 0.10;
+        } else if (promoCode === 'SAVE20') {
+          discount = subtotal * 0.20;
         } else if (promoCode === 'FREESHIP') {
           discount = shipping;
         }
 
         const total = subtotal + shipping + tax - discount;
+        const shippingText = shipping === 0 ? 'FREE' : this.formatCurrency(shipping);
+        const discountText = discount > 0 ? `-${this.formatCurrency(discount)}` : this.formatCurrency(0);
+        const promoText = promoCode ? `<div class="summary-row"><span class="text-muted">Coupon:</span><span class="text-primary">${promoCode}</span></div>` : '';
+        const promoFeedback = document.getElementById('promoFeedback');
+        if (promoFeedback) {
+          promoFeedback.textContent = promoCode ? `Promo code ${promoCode} applied` : '';
+        }
 
         const summaryHTML = `
           <div class="mb-3">
@@ -388,34 +443,53 @@
                   <small class="fw-bold">${item.name}</small>
                   <br><small class="text-muted">Qty: ${item.qty || 1}</small>
                 </div>
-                <small class="text-success">₹${(item.price || item.discounted || item.mrp || 0) * (item.qty || 1)}</small>
+                <small class="text-success">${this.formatCurrency((item.price || item.discounted || item.mrp || 0) * (item.qty || 1))}</small>
               </div>
             `).join('')}
           </div>
           <hr>
           <div class="d-flex justify-content-between mb-2">
             <span>Subtotal:</span>
-            <span>₹${subtotal.toFixed(2)}</span>
+            <span>${this.formatCurrency(subtotal)}</span>
           </div>
           <div class="d-flex justify-content-between mb-2">
             <span>Shipping:</span>
-            <span>${shipping === 0 ? 'FREE' : `₹${shipping}`}</span>
+            <span>${shippingText}</span>
           </div>
           <div class="d-flex justify-content-between mb-2">
             <span>Tax:</span>
-            <span>₹${tax.toFixed(2)}</span>
+            <span>${this.formatCurrency(tax)}</span>
           </div>
           <div class="d-flex justify-content-between mb-2">
             <span>Discount:</span>
-            <span class="text-success">-₹${discount.toFixed(2)}</span>
+            <span class="text-success">${discountText}</span>
           </div>
+          ${promoText}
           <hr>
           <div class="d-flex justify-content-between mb-3">
             <strong>Total:</strong>
-            <strong class="text-success">₹${total.toFixed(2)}</strong>
+            <strong class="text-success">${this.formatCurrency(total)}</strong>
           </div>
         `;
         summaryContainer.innerHTML = summaryHTML;
+      }
+
+      populateStates() {
+        const stateSelect = document.getElementById('state');
+        if (!stateSelect) return;
+        this.states
+          .slice()
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .forEach(({ code, name }) => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = name;
+            stateSelect.appendChild(option);
+          });
+      }
+
+      getStateName(code) {
+        return this.states.find((state) => state.code === code)?.name || code;
       }
 
       setupEventListeners() {
@@ -455,11 +529,32 @@
           e.preventDefault();
           this.processOrder();
         });
+
+        // Pincode input restriction and inline validation
+        const pincodeInput = document.getElementById('pincode');
+        pincodeInput?.addEventListener('input', () => {
+          pincodeInput.value = pincodeInput.value.replace(/[^0-9]/g, '').slice(0, 6);
+          if (pincodeInput.value.length === 6) {
+            pincodeInput.classList.remove('is-invalid');
+            pincodeInput.classList.add('is-valid');
+          } else {
+            pincodeInput.classList.remove('is-valid');
+          }
+        });
+
+        // Update validation state when users change the state selection
+        const stateSelect = document.getElementById('state');
+        stateSelect?.addEventListener('change', () => {
+          if (stateSelect.value) {
+            stateSelect.classList.remove('is-invalid');
+            stateSelect.classList.add('is-valid');
+          }
+        });
       }
 
       nextStep() {
         if (this.validateCurrentStep()) {
-          this.currentStep++;
+          this.currentStep = Math.min(this.currentStep + 1, 3);
           this.showStep();
           this.updateProgress();
         }
@@ -492,8 +587,20 @@
         let isValid = true;
 
         inputs.forEach(input => {
-          if (!input.value.trim()) {
+          const value = input.value.trim();
+          let valid = Boolean(value);
+
+          if (input.id === 'pincode') {
+            valid = /^[0-9]{6}$/.test(value);
+          }
+
+          if (input.id === 'state') {
+            valid = value !== '';
+          }
+
+          if (!valid) {
             input.classList.add('is-invalid');
+            input.classList.remove('is-valid');
             isValid = false;
           } else {
             input.classList.remove('is-invalid');
@@ -501,8 +608,48 @@
           }
         });
 
+        if (this.currentStep === 2) {
+          const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value;
+          if (paymentMethod === 'card') {
+            const cardNumber = document.getElementById('cardNumber');
+            const expiryDate = document.getElementById('expiryDate');
+            const cvv = document.getElementById('cvv');
+
+            const cardNumberValid = /^[0-9]{12,19}$/.test(cardNumber.value.replace(/\s+/g, ''));
+            const expiryValid = /^(0[1-9]|1[0-2])\/(?:[2-9][0-9])$/.test(expiryDate.value.trim());
+            const cvvValid = /^[0-9]{3,4}$/.test(cvv.value.trim());
+
+            if (!cardNumberValid) {
+              cardNumber.classList.add('is-invalid');
+              cardNumber.classList.remove('is-valid');
+              isValid = false;
+            } else {
+              cardNumber.classList.remove('is-invalid');
+              cardNumber.classList.add('is-valid');
+            }
+
+            if (!expiryValid) {
+              expiryDate.classList.add('is-invalid');
+              expiryDate.classList.remove('is-valid');
+              isValid = false;
+            } else {
+              expiryDate.classList.remove('is-invalid');
+              expiryDate.classList.add('is-valid');
+            }
+
+            if (!cvvValid) {
+              cvv.classList.add('is-invalid');
+              cvv.classList.remove('is-valid');
+              isValid = false;
+            } else {
+              cvv.classList.remove('is-invalid');
+              cvv.classList.add('is-valid');
+            }
+          }
+        }
+
         if (!isValid) {
-          this.showToast('Please fill in all required fields', 'error');
+          this.showToast('Please fill in all required fields correctly', 'error');
         }
 
         return isValid;
@@ -511,13 +658,14 @@
       loadOrderReview() {
         const reviewContainer = document.getElementById('orderReview');
         
+        const stateCode = document.getElementById('state').value;
         const shippingInfo = {
           name: `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}`,
           email: document.getElementById('email').value,
           phone: document.getElementById('phone').value,
           address: document.getElementById('address').value,
           city: document.getElementById('city').value,
-          state: document.getElementById('state').value,
+          state: this.getStateName(stateCode),
           pincode: document.getElementById('pincode').value
         };
 
@@ -552,7 +700,7 @@
                   <small class="fw-bold">${item.name}</small>
                   <br><small class="text-muted">Qty: ${item.qty || 1}</small>
                 </div>
-                <small class="text-success">₹${(item.price || item.discounted || item.mrp || 0) * (item.qty || 1)}</small>
+                <small class="text-success">${this.formatCurrency((item.price || item.discounted || item.mrp || 0) * (item.qty || 1))}</small>
               </div>
             `).join('')}
           </div>
@@ -569,12 +717,13 @@
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cod';
         const apiPaymentMethod =
           paymentMethod === 'card' ? 'stripe' : paymentMethod === 'upi' ? 'razorpay' : 'cod';
+        const stateCode = document.getElementById('state')?.value;
         const shipping_address = [
           document.getElementById('firstName')?.value,
           document.getElementById('lastName')?.value,
           document.getElementById('address')?.value,
           document.getElementById('city')?.value,
-          document.getElementById('state')?.value,
+          this.getStateName(stateCode),
           document.getElementById('pincode')?.value,
         ].filter(Boolean).join(', ');
 
@@ -589,6 +738,7 @@
             if (window.cartManager) {
               window.cartManager.items = [];
               window.cartManager.updateCartCount();
+              window.cartManager.notifyCartUpdated();
             }
             let paymentNote = '';
             if (apiPaymentMethod === 'stripe' || apiPaymentMethod === 'razorpay') {
@@ -651,6 +801,7 @@
         }
 
         const orderId = 'ORD' + Date.now();
+        const promoCode = localStorage.getItem('appliedPromoCode') || null;
         const orderData = {
           id: orderId,
           items: this.cart,
@@ -659,11 +810,17 @@
           status: 'pending',
           orderDate: new Date().toISOString(),
           total: this.calculateTotal(),
+          promo_code: promoCode,
         };
         const orders = JSON.parse(localStorage.getItem('orders') || '[]');
         orders.push(orderData);
         localStorage.setItem('orders', JSON.stringify(orders));
         localStorage.removeItem('cart');
+        if (window.cartManager) {
+          window.cartManager.items = [];
+          window.cartManager.updateCartCount();
+          window.cartManager.notifyCartUpdated();
+        }
         this.showToast(`Order saved locally. Order ID: ${orderId}`, 'success');
         setTimeout(() => {
           window.location.href = `order.html?orderId=${orderId}`;
@@ -679,7 +836,18 @@
 
         const shipping = subtotal > 499 ? 0 : 99;
         const tax = subtotal * 0.18;
-        return subtotal + shipping + tax;
+
+        const promoCode = localStorage.getItem('appliedPromoCode') || '';
+        let discount = 0;
+        if (promoCode === 'DEALS10' || promoCode === 'WELCOME10') {
+          discount = subtotal * 0.10;
+        } else if (promoCode === 'SAVE20') {
+          discount = subtotal * 0.20;
+        } else if (promoCode === 'FREESHIP') {
+          discount = shipping;
+        }
+
+        return subtotal + shipping + tax - discount;
       }
 
       showToast(message, type = 'info') {
@@ -716,21 +884,36 @@
 
     // Initialize checkout manager
     const checkoutManager = new CheckoutManager();
+    window.checkoutManager = checkoutManager;
 
     // Global functions for step navigation
-    function nextStep() {
-      checkoutManager.nextStep();
-    }
+    window.nextStep = function () {
+      if (window.checkoutManager) {
+        window.checkoutManager.nextStep();
+      }
+    };
 
-    function prevStep() {
-      checkoutManager.prevStep();
-    }
+    window.prevStep = function () {
+      if (window.checkoutManager) {
+        window.checkoutManager.prevStep();
+      }
+    };
+
+    // Attach buttons explicitly in case inline onclick is blocked
+    document.getElementById('step1NextBtn')?.addEventListener('click', window.nextStep);
+    document.getElementById('step2NextBtn')?.addEventListener('click', window.nextStep);
+    document.getElementById('step2PrevBtn')?.addEventListener('click', window.prevStep);
+    document.getElementById('step3PrevBtn')?.addEventListener('click', window.prevStep);
 
     // Auth area rendering
     function renderAuthArea() {
       const authArea = document.getElementById('authArea');
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-      const isAdmin = localStorage.getItem('isAdminLoggedIn') === 'true';
+      const accessToken = localStorage.getItem('access_token');
+      const storedUser = localStorage.getItem('user_data') || localStorage.getItem('currentUser');
+      const user = storedUser ? JSON.parse(storedUser) : {};
+      const displayName = user.name || user.first_name || user.email || 'User';
+      const isLoggedIn = !!accessToken && !!storedUser;
+      const isAdmin = !!(accessToken && storedUser && (user.is_staff || user.is_superuser || ['super_admin','superadmin','admin','manager','staff'].includes(String(user.role || user.user_role || '').toLowerCase().replace(/[-_\s]+/g, '_'))));
 
       if (isAdmin) {
         authArea.innerHTML = `
@@ -738,26 +921,25 @@
             <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
               <i class="fas fa-user-shield"></i> Admin
             </button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="admin.html"><i class="fas fa-tools"></i> Admin Panel</a></li>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="admin.html"><i class="fas fa-tools me-2"></i>Admin Panel</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><button class="dropdown-item text-danger" onclick="logout('admin')"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+              <li><button class="dropdown-item text-danger" type="button" onclick="logout('admin')"><i class="fas fa-sign-out-alt me-2"></i>Logout</button></li>
             </ul>
           </div>
         `;
       } else if (isLoggedIn) {
-        const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
         authArea.innerHTML = `
           <div class="dropdown">
             <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-              <i class="fas fa-user-circle"></i> ${user.name || 'User'}
+              <i class="fas fa-user-circle"></i> ${displayName}
             </button>
-            <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user"></i> Profile</a></li>
-              <li><a class="dropdown-item" href="account.html"><i class="fas fa-cog"></i> Settings</a></li>
-              <li><a class="dropdown-item" href="order.html"><i class="fas fa-box"></i> Orders</a></li>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i>Profile</a></li>
+              <li><a class="dropdown-item" href="account.html"><i class="fas fa-cog me-2"></i>Settings</a></li>
+              <li><a class="dropdown-item" href="order.html"><i class="fas fa-box me-2"></i>Orders</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><button class="dropdown-item text-danger" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+              <li><button class="dropdown-item text-danger" type="button" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Logout</button></li>
             </ul>
           </div>
         `;
@@ -770,11 +952,17 @@
     }
 
     function logout(type) {
-      if (type === 'admin') {
-        localStorage.removeItem('isAdminLoggedIn');
-      } else {
+      try {
+        if (type === 'admin' || (localStorage.getItem('access_token') && (JSON.parse(localStorage.getItem('currentUser') || localStorage.getItem('user_data') || '{}').is_staff || JSON.parse(localStorage.getItem('currentUser') || localStorage.getItem('user_data') || '{}').is_superuser))) {
+          fetch('http://127.0.0.1:8000/api/auth/logout/', { method: 'POST', credentials: 'include' }).catch(() => {});
+        }
+      } finally {
         localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('isAdminLoggedIn');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('user_data');
       }
       window.location.href = 'index.html';
     }

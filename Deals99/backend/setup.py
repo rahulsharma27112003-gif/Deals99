@@ -17,16 +17,30 @@ def setup_database():
     """Initialize database and create sample data"""
     print("Setting up database...")
     
-    # Create superuser
-    if not User.objects.filter(email='admin@deals99.com').exists():
+    # Create or update superuser credentials
+    superadmin_email = 'superadmin@example.com'
+    superadmin_password = 'Admin12345'
+    superadmin_username = 'superadmin'
+
+    superadmin = User.objects.filter(email=superadmin_email).first()
+    if superadmin:
+        superadmin.username = superadmin_username
+        superadmin.first_name = 'Super'
+        superadmin.last_name = 'Admin'
+        superadmin.is_staff = True
+        superadmin.is_superuser = True
+        superadmin.set_password(superadmin_password)
+        superadmin.save()
+        print(f"✓ Updated existing admin user (email: {superadmin_email})")
+    else:
         User.objects.create_superuser(
-            email='admin@deals99.com',
-            password='admin123',
-            username='admin',
-            first_name='Admin',
-            last_name='User'
+            email=superadmin_email,
+            password=superadmin_password,
+            username=superadmin_username,
+            first_name='Super',
+            last_name='Admin'
         )
-        print("✓ Created admin user (username: admin, password: admin123)")
+        print(f"✓ Created admin user (username: {superadmin_username}, password: {superadmin_password})")
     
     # Create sample categories
     categories_data = [

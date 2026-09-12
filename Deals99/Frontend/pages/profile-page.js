@@ -36,8 +36,9 @@ class ProfilePageManager {
   async loadUserData() {
     try {
       this.userData = await fetchUserProfile();
+      const currentUser = getCurrentUser() || {};
       setCurrentUser({
-        ...getCurrentUser(),
+        ...currentUser,
         email: this.userData.email,
         first_name: this.userData.first_name,
         last_name: this.userData.last_name,
@@ -198,11 +199,12 @@ class ProfilePageManager {
   }
 }
 
-window.showTab = function showTab(tabName) {
+window.showTab = function showTab(tabName, button) {
   document.querySelectorAll('.tab-content').forEach((t) => t.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
   document.getElementById(`${tabName}Tab`)?.classList.add('active');
-  if (event?.target?.classList) event.target.classList.add('active');
+  const activeButton = button || document.querySelector(`.tab-btn[data-tab="${tabName}"]`) || document.querySelector(`.btn-profile[data-tab="${tabName}"]`);
+  activeButton?.classList?.add('active');
 };
 
 window.updateAvatar = function updateAvatar(input) {

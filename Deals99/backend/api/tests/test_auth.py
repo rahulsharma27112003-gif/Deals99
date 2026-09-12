@@ -185,6 +185,32 @@ class AuthenticationTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('csrfToken', response.data)
 
+    def test_current_user_endpoint_returns_authenticated_user(self):
+        """Authenticated callers should get the canonical current user payload."""
+        user = User.objects.create_user(
+            username='meuser',
+            email='me@example.com',
+            password='SecurePass123!'
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.get('/api/auth/me/')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['email'], 'me@example.com')
+        self.assertEqual(response.data['role'], user.role)
+
+    def test_role_normalization_is_canonical(self):
+        """All accepted role aliases should resolve to one canonical backend value."""
+        from api.permissions import _normalize_role
+
+        self.assertEqual(_normalize_role('SUPERADMIN'), 'SUPERADMIN')
+        self.assertEqual(_normalize_role('super_admin'), 'SUPERADMIN')
+        self.assertEqual(_normalize_role('superadmin'), 'SUPERADMIN')
+        self.assertEqual(_normalize_role('admin'), 'ADMIN')
+        self.assertEqual(_normalize_role('manager'), 'MANAGER')
+        self.assertEqual(_normalize_role('customer'), 'CUSTOMER')
+
 
 class UserProfileTestCase(TestCase):
     """Test user profile endpoints"""

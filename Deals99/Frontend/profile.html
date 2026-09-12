@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="global.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
     
     .avatar-img {
@@ -276,7 +277,247 @@
       color: white;
       transform: scale(1.1);
     }
-    
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .profile-sidebar {
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #e9ecef;
+      border-radius: 24px;
+      padding: 1.5rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06);
+    }
+
+    .profile-avatar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .avatar-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto;
+    }
+
+    .profile-info {
+      margin-top: 0.5rem;
+    }
+
+    .profile-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1d3557;
+    }
+
+    .profile-email {
+      font-size: 0.95rem;
+      color: #6c757d;
+    }
+
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-item {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 16px;
+      text-align: center;
+      border: 1px solid #e9ecef;
+    }
+
+    .stat-number {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #1d3557;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+
+    .profile-actions {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .btn-profile {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      justify-content: flex-start;
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+
+    .btn-primary-profile {
+      background: #e91e63;
+      color: #fff;
+    }
+
+    .btn-secondary-profile {
+      background: #f8f9fa;
+      color: #343a40;
+    }
+
+    .btn-profile:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+    }
+
+    .profile-content {
+      background: rgba(255,255,255,0.95);
+      border: 1px solid #e9ecef;
+      border-radius: 24px;
+      padding: 1.75rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.06);
+    }
+
+    .content-tabs {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+      background: #f8f9fa;
+      color: #495057;
+      border: none;
+      border-radius: 14px;
+      padding: 0.8rem 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn.active,
+    .tab-btn:hover {
+      background: #e91e63;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .tab-content {
+      display: none;
+      animation: slideInUp 0.35s ease forwards;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      color: #495057;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      border: 1px solid #ced4da;
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
+      color: #495057;
+      background: #fff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #e91e63;
+      box-shadow: 0 0 0 0.15rem rgba(233,30,99,0.15);
+    }
+
+    .profile-content .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      color: #1d3557;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .preferences-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .recent-orders {
+      grid-template-columns: 1fr;
+    }
+
+    @media (max-width: 992px) {
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .content-tabs {
+        flex-direction: column;
+      }
+
+      .profile-actions {
+        gap: 0.5rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .btn-save {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
     @media (max-width: 768px) {
       .container {
         margin: 20px auto;
@@ -363,16 +604,16 @@
         </div>
         
         <div class="profile-actions">
-          <button class="btn-profile btn-primary-profile" onclick="showTab('personal')">
+          <button class="btn-profile btn-primary-profile" data-tab="personal" onclick="showTab('personal', this)">
             <i class="fas fa-user"></i> Personal Info
           </button>
-          <button class="btn-profile btn-secondary-profile" onclick="showTab('security')">
+          <button class="btn-profile btn-secondary-profile" data-tab="security" onclick="showTab('security', this)">
             <i class="fas fa-shield-alt"></i> Security
           </button>
-          <button class="btn-profile btn-secondary-profile" onclick="showTab('preferences')">
+          <button class="btn-profile btn-secondary-profile" data-tab="preferences" onclick="showTab('preferences', this)">
             <i class="fas fa-cog"></i> Preferences
           </button>
-          <button class="btn-profile btn-secondary-profile" onclick="showTab('orders')">
+          <button class="btn-profile btn-secondary-profile" data-tab="orders" onclick="showTab('orders', this)">
             <i class="fas fa-box"></i> Recent Orders
           </button>
           <button class="btn-profile btn-secondary-profile" onclick="logout()">
@@ -384,16 +625,16 @@
       <!-- Profile Content -->
       <div class="profile-content">
         <div class="content-tabs">
-          <button class="tab-btn active" onclick="showTab('personal')">
+          <button class="tab-btn active" data-tab="personal" onclick="showTab('personal', this)">
             <i class="fas fa-user"></i> Personal Information
           </button>
-          <button class="tab-btn" onclick="showTab('security')">
+          <button class="tab-btn" data-tab="security" onclick="showTab('security', this)">
             <i class="fas fa-shield-alt"></i> Security Settings
           </button>
-          <button class="tab-btn" onclick="showTab('preferences')">
+          <button class="tab-btn" data-tab="preferences" onclick="showTab('preferences', this)">
             <i class="fas fa-cog"></i> Preferences
           </button>
-          <button class="tab-btn" onclick="showTab('orders')">
+          <button class="tab-btn" data-tab="orders" onclick="showTab('orders', this)">
             <i class="fas fa-box"></i> Recent Orders
           </button>
         </div>

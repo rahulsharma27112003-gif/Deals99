@@ -3,7 +3,7 @@
  */
 import { fetchProducts, fetchCategories } from '../api.js';
 
-const PLACEHOLDER_IMG = 'https://via.placeholder.com/100?text=Product';
+const PLACEHOLDER_IMG = 'favicon.svg';
 
 let allProducts = [];
 let filteredProducts = [];

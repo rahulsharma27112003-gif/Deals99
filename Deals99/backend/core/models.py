@@ -10,6 +10,14 @@ from django.contrib.auth.models import (
     AbstractBaseUser, PermissionsMixin, BaseUserManager
 )
 from django.utils import timezone
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.conf import settings
+try:
+    # Django 3.1+ JSONField
+    from django.db.models import JSONField
+except Exception:
+    from django.contrib.postgres.fields import JSONField
 
 
 class UserManager(BaseUserManager):
@@ -118,3 +126,36 @@ class User(AbstractBaseUser, PermissionsMixin):
             self.lock(minutes=lock_minutes)
         else:
             self.save(update_fields=['failed_login_attempts'])
+
+
+class AuditLog(models.Model):
+    ACTION_CREATE = 'create'
+    ACTION_UPDATE = 'update'
+    ACTION_DELETE = 'delete'
+
+    ACTION_CHOICES = [
+        (ACTION_CREATE, 'Create'),
+        (ACTION_UPDATE, 'Update'),
+        (ACTION_DELETE, 'Delete'),
+    ]
+
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES)
+    # Generic relation to any model
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.CharField(max_length=255)
+    content_object = GenericForeignKey('content_type', 'object_id')
+    object_repr = models.CharField(max_length=255, blank=True)
+
+    changes = JSONField(null=True, blank=True)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    ip_address = models.CharField(max_length=45, null=True, blank=True)
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
+    extra = JSONField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = 'Audit Log'
+        verbose_name_plural = 'Audit Logs'
+
+    def __str__(self):
+        return f"{self.get_action_display()} {self.content_type} {self.object_repr} at {self.timestamp}"

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
-from django.db.models import Count, Sum
+from django.db.models import Count, DecimalField, Sum, Value
 from django.db.models.functions import TruncDay, TruncWeek, TruncMonth, Coalesce
 
 from api.models import Category, Subcategory, Product, Order, Review
@@ -59,21 +59,21 @@ def get_revenue_time_buckets() -> dict:
     daily = (
         base_qs.annotate(day=TruncDay('created_at'))
         .values('day')
-        .annotate(total=Coalesce(Sum('total_amount'), 0))
+        .annotate(total=Coalesce(Sum('total_amount'), Value(0), output_field=DecimalField(max_digits=10, decimal_places=2)))
         .order_by('-day')
     )
 
     weekly = (
         base_qs.annotate(week=TruncWeek('created_at'))
         .values('week')
-        .annotate(total=Coalesce(Sum('total_amount'), 0))
+        .annotate(total=Coalesce(Sum('total_amount'), Value(0), output_field=DecimalField(max_digits=10, decimal_places=2)))
         .order_by('-week')
     )
 
     monthly = (
         base_qs.annotate(month=TruncMonth('created_at'))
         .values('month')
-        .annotate(total=Coalesce(Sum('total_amount'), 0))
+        .annotate(total=Coalesce(Sum('total_amount'), Value(0), output_field=DecimalField(max_digits=10, decimal_places=2)))
         .order_by('-month')
     )
 

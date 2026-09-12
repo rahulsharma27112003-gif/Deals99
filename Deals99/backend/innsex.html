@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MysticBrew Cafe | Cosmic Brewing & Elixirs</title>
+    <style>
+        /* --- IMPORTS & VARIABLES --- */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap');
+
+        :root {
+            --midnight: #050b1a;
+            --cosmic-purple: #0d0620;
+            --nebula-violet: #1a0533;
+            --indigo: #6366f1;
+            --teal: #0d9488;
+            --gold: #f59e0b;
+            --white: #e2e8f0;
+            --wa-green: #25d366;
+            --nav-bg: rgba(5, 11, 26, 0.75);
+        }
+
+        /* --- CSS RESET & BASE STYLES --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+            background-color: var(--midnight);
+            color: var(--white);
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, .font-display {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 2px;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* Hide native cursor for interactive custom canvas cursor on screens with pointers */
+        @media (pointer: fine) {
+            html, body, a, button, input {
+                cursor: none !important;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--midnight);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--nebula-violet);
+            border: 2px solid var(--midnight);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--indigo);
+        }
+
+        /* --- GLOBAL CANVAS CURSOR LAYER --- */
+        #cursorCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* --- FIXED NAVBAR --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-between;
+            align-items: center;
+            padding: 1.5rem 4rem;
+            z-index: 1000;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            background: var(--nav-bg);
+            border-b: 1px solid rgba(99, 102, 241, 0.1);
+            transition: padding 0.3s ease, background 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            padding: 1rem 4rem;
+            background: rgba(5, 11, 26, 0.9);
+            border-b: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--white);
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 500;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--indigo);
+            transition: width 0.3s ease;
+            box-shadow: 0 0 8px var(--indigo);
+        }
+
+        .nav-links a:hover {
+            color: var(--indigo);
+            text-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            background: none;
+            border: none;
+            outline: none;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 28px;
+            height: 2px;
+            background: var(--white);
+            transition: 0.3s ease;
+        }
+
+        /* --- UTILITY SCROLL TRANSITIONS --- */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- 1. HERO SECTION --- */
+        #hero {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-center: center;
+            overflow: hidden;
+            background: radial-gradient(circle at center, var(--cosmic-purple) 0%, var(--midnight) 100%);
+        }
+
+        #hero-starfield {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+            padding: 0 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #ffffff, #c7d2fe, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 20px rgba(99, 102, 241, 0.3));
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            font-weight: 300;
+            color: #94a3b8;
+            margin-bottom: 3rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        .hero-svg-container {
+            margin-bottom: 2.5rem;
+            animation: floatCup 4s ease-in-out infinite;
+        }
+
+        @keyframes floatCup {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(3deg); }
+        }
+
+        .btn-cosmic {
+            position: relative;
+            padding: 1rem 2.5rem;
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--white);
+            background: transparent;
+            border: 1px solid var(--indigo);
+            border-radius: 4px;
+            outline: none;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-cosmic::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-cosmic:hover {
+            background: rgba(99, 102, 241, 0.15);
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.6), inset 0 0 10px rgba(99, 102, 241, 0.3);
+            border-color: #818cf8;
+            transform: scale(1.03);
+        }
+
+        .btn-cosmic:hover::before {
+            left: 100%;
+        }
+
+        /* --- 2. ABOUT SECTION --- */
+        #about {
+            padding: 8rem 4rem;
+            background: radial-gradient(circle at 80% 20%, var(--nebula-violet) 0%, var(--cosmic-purple) 60%, var(--midnight) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            border-b: 1px solid rgba(99, 102, 241, 0.05);
+        }
+
+        .about-container {
+            max-w: 1200px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6rem;
+            align-items: center;
+        }
+
+        .about-left {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Cosmic Portal Art Component */
+        .portal-wrapper {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .portal-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px dashed rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .ring-1 {
+            width: 100%;
+            height: 100%;
+            animation: spinClockwise 25s linear infinite;
+            border-top-color: var(--indigo);
+            border-bottom-color: var(--teal);
+        }
+
+        .ring-2 {
+            width: 80%;
+            height: 80%;
+            animation: spinCounter 18s linear infinite;
+            border-left-color: var(--gold);
+            border-right-color: var(--indigo);
+            border-style: dotted;
+        }
+
+        .ring-3 {
+            width: 62%;
+            height: 62%;
+            border: 1px solid rgba(13, 148, 136, 0.3);
+            animation: spinClockwise 10s linear infinite;
+        }
+
+        .portal-core {
+            width: 45%;
+            height: 45%;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--indigo) 0%, var(--nebula-violet) 70%, transparent 100%);
+            box-shadow: 0 0 40px var(--indigo), inset 0 0 20px rgba(255, 255, 255, 0.4);
+            animation: pulseGlow 4s ease-in-out infinite;
+        }
+
+        @keyframes spinClockwise {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spinCounter {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 0.8; filter: drop-shadow(0 0 15px var(--indigo)); }
+            50% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 0 35px var(--indigo)); }
+        }
+
+        .about-right {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .section-label {
+            font-size: 0.85rem;
+            color: var(--indigo);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            font-weight: 600;
+        }
+
+        .about-title {
+            font-size: 2.8rem;
+            line-height: 1.2;
+            background: linear-gradient(to right, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .about-text {
+            color: #94a3b8;
+            line-height: 1.8;
+            font-size: 1.05rem;
+            font-weight: 300;
+        }
+
+        /* --- 3. MENU SECTION --- */
+        #menu {
+            padding: 8rem 4rem;
+            background: var(--midnight);
+            position: relative;
+        }
+
+        .menu-header {
+            text-align: center;
+            margin-bottom: 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* View Mode Toggle Controls */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.4rem;
+            border-radius: 50px;
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            position: relative;
+            margin-top: 1rem;
+        }
+
+        .toggle-btn {
+            padding: 0.6rem 1.8rem;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .toggle-btn.active {
+            color: var(--white);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 140px;
+            height: calc(100% - 8px);
+            background: linear-gradient(135deg, var(--indigo), var(--nebula-violet));
+            border-radius: 50px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+            box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Menu Grid Containers */
+        .menu-view-wrapper {
+            max-w: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .menu-grid.hidden-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            opacity: 0;
+            transform: scale(0.98);
+            pointer-events: none;
+        }
+
+        .category-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: relative;
+        }
+
+        .category-title-container {
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-title {
+            font-size: 1.4rem;
+            color: var(--white);
+            border-b: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 0.75rem;
+        }
+
+        /* --- SIMPLE VIEW CARDS --- */
+        .simple-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .simple-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .item-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+        }
+
+        .item-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .item-price {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .item-desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            line-height: 1.5;
+            font-weight: 300;
+        }
+
+        /* --- COSMIC VIEW CARDS & EFFECTS --- */
+        /* Constellation Line Accents */
+        .cosmic-mode .category-title-container::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, var(--indigo) 0%, transparent 100%);
+        }
+
+        .cosmic-mode .category-title {
+            color: #ca8a04;
+            border-b: none;
+            padding-bottom: 0.75rem;
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cosmic-mode .category-title::before {
+            content: '✦';
+            font-size: 0.8rem;
+            color: var(--gold);
+        }
+
+        .cosmic-card {
+            background: linear-gradient(135deg, rgba(13, 6, 32, 0.7) 0%, rgba(5, 11, 26, 0.8) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            padding: 1.75rem;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+        }
+
+        /* Ambient Cosmic Rotating Light Background */
+        .cosmic-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(13, 148, 136, 0.1) 0%, rgba(99, 102, 241, 0.05) 40%, transparent 70%);
+            transform: rotate(0deg);
+            transition: transform 0.5s ease;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .cosmic-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 12px 30px rgba(13, 6, 32, 0.8), 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .cosmic-card:hover::before {
+            transform: rotate(180deg);
+        }
+
+        .cosmic-card * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .cosmic-card .item-name {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1px;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .cosmic-card:hover .item-name {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+        }
+
+        .cosmic-card .item-desc {
+            color: #94a3b8;
+        }
+
+        /* --- 4. SERVICES SECTION --- */
+        #services {
+            padding: 8rem 4rem;
+            background: radial-gradient(circle at 20% 80%, var(--nebula-violet) 0%, var(--midnight) 70%);
+            border-top: 1px solid rgba(99, 102, 241, 0.05);
+        }
+
+        .services-header {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+
+        .services-grid {
+            max-w: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.5rem;
+        }
+
+        .service-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 2.5rem 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.25rem;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(13, 148, 136, 0.3);
+            box-shadow: 0 10px 25px rgba(5, 11, 26, 0.5), 0 0 15px rgba(13, 148, 136, 0.1);
+            animation: pulseTealBorder 2s infinite alternate;
+        }
+
+        @keyframes pulseTealBorder {
+            0% { border-color: rgba(13, 148, 136, 0.3); }
+            100% { border-color: rgba(99, 102, 241, 0.5); }
+        }
+
+        .service-icon {
+            fill: none;
+            stroke: var(--teal);
+            transition: transform 0.3s ease, stroke 0.3s ease;
+        }
+
+        .service-card:hover .service-icon {
+            transform: scale(1.1);
+            stroke: var(--indigo);
+            filter: drop-shadow(0 0 8px var(--indigo));
+        }
+
+        .service-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--white);
+        }
+
+        .service-desc {
+            font-size: 0.85rem;
+            color: #64748b;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        /* --- 5. LOCATION SECTION --- */
+        #location {
+            padding: 8rem 4rem;
+            background: var(--midnight);
+        }
+
+        .location-container {
+            max-w: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 5rem;
+            align-items: center;
+        }
+
+        .location-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 3rem;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .location-title {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .info-icon {
+            stroke: var(--indigo);
+            margin-top: 0.25rem;
+            flex-shrink: 0;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 1px;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 1rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+            font-weight: 300;
+        }
+
+        .map-frame-wrapper {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            padding: 6px;
+            background: linear-gradient(135deg, var(--indigo), var(--cosmic-purple));
+            box-shadow: 0 15px 35px rgba(5, 11, 26, 0.8), 0 0 25px rgba(99, 102, 241, 0.2);
+        }
+
+        .map-frame-wrapper iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+            border-radius: 12px;
+            display: block;
+            background: var(--cosmic-purple);
+        }
+
+        /* --- 6. WHATSAPP ORDER CTA --- */
+        #order {
+            padding: 8rem 4rem;
+            background: linear-gradient(180deg, var(--midnight) 0%, var(--nebula-violet) 50%, var(--midnight) 100%);
+            text-align: center;
+            position: relative;
+            border-top: 1px solid rgba(99, 102, 241, 0.05);
+        }
+
+        .order-content {
+            max-w: 700px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .order-title {
+            font-size: 3rem;
+            background: linear-gradient(to right, #fff, #f59e0b, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .order-subtext {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            font-weight: 300;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-whatsapp {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            background-color: transparent;
+            color: #fff;
+            border: 2px solid var(--wa-green);
+            padding: 1.2rem 3rem;
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(37, 211, 102, 0.2);
+            animation: pulseWhatsAppGlow 2.5s infinite;
+        }
+
+        .btn-whatsapp:hover {
+            background-color: var(--wa-green);
+            transform: translateY(-3px);
+            box-shadow: 0 0 30px rgba(37, 211, 102, 0.6);
+        }
+
+        .btn-whatsapp svg {
+            fill: #fff;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-whatsapp:hover desert-svg {
+            transform: scale(1.1);
+        }
+
+        @keyframes pulseWhatsAppGlow {
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5); }
+            70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+
+        /* --- 7. FOOTER --- */
+        footer {
+            background: #030712;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .footer-container {
+            max-w: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .footer-logo {
+            font-size: 1.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .footer-tagline {
+            font-size: 0.9rem;
+            color: #4b5563;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .footer-socials {
+            display: flex;
+            gap: 1.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            color: #64748b;
+        }
+
+        .social-link:hover {
+            color: var(--white);
+            border-color: var(--indigo);
+            background: rgba(99, 102, 241, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .footer-muted {
+            font-size: 0.75rem;
+            color: #374151;
+            letter-spacing: 1.5px;
+            margin-top: 1rem;
+        }
+
+        /* --- MOBILE DRAWER DROPDOWN MENU --- */
+        .mobile-menu-drawer {
+            position: fixed;
+            top: 0;
+            left: 100%;
+            width: 100%;
+            height: 100vh;
+            background: var(--midnight);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 2.5rem;
+            transition: left 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+
+        .mobile-menu-drawer.open {
+            left: 0;
+        }
+
+        .mobile-menu-drawer ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .mobile-menu-drawer a {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: color 0.3s ease;
+        }
+
+        .mobile-menu-drawer a:hover {
+            color: var(--indigo);
+        }
+
+        /* --- RESPONSIVE DESIGN BREAKPOINTS --- */
+        @media (max-width: 1200px) {
+            .menu-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 2rem;
+            }
+            .services-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .navbar { padding: 1.5rem 2.5rem; }
+            .navbar.scrolled { padding: 1rem 2.5rem; }
+            .about-container { gap: 3rem; }
+            .about-title { font-size: 2.3rem; }
+            .location-container { grid-template-columns: 1fr; gap: 4rem; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hamburger { display: flex; }
+            
+            /* Toggle hamburger to cross structural layout change */
+            .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(6px, 6px); }
+            .hamburger.open span:nth-child(2) { opacity: 0; }
+            .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+            .hero-title { font-size: 2.8rem; }
+            .hero-subtitle { font-size: 1rem; letter-spacing: 2px; }
+            
+            .about-container { grid-template-columns: 1fr; gap: 4rem; text-align: center; }
+            .about-left { order: 2; }
+            .about-right { order: 1; align-items: center; }
+            
+            .menu-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+            .services-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            
+            .location-card { padding: 2rem 1.5rem; }
+            .location-title { font-size: 1.8rem; }
+            .order-title { font-size: 2.2rem; }
+            
+            #about, #menu, #services, #location, #order { padding: 5rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="cursorCanvas"></canvas>
+
+    <nav class="navbar">
+        <a href="#hero" class="nav-logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--indigo);filter:drop-shadow(0 0 5px var(--indigo))"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/><circle cx="12" cy="12" r="4"/></svg>
+            <span>MysticBrew</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#about">About</a></li>
+            <li><a href="#menu">Menu</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#location">Location</a></li>
+            <li><a href="#order">Order</a></li>
+        </ul>
+        <button class="hamburger" aria-label="Toggle Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </nav>
+
+    <div class="mobile-menu-drawer">
+        <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#menu">Menu</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#location">Location</a></li>
+            <li><a href="#order">Order</a></li>
+        </ul>
+    </div>
+
+    <section id="hero">
+        <canvas id="hero-starfield"></canvas>
+        <div class="hero-content">
+            <div class="hero-svg-container">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="url(#cosmic-grad)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <defs>
+                        <linearGradient id="cosmic-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#6366f1" />
+                            <stop offset="100%" stop-color="#0d9488" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
+                    <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+                    <line x1="6" y1="2" x2="6" y2="4" />
+                    <line x1="10" y1="2" x2="10" y2="4" />
+                    <line x1="14" y1="2" x2="14" y2="4" />
+                </svg>
+            </div>
+            <h1 class="hero-title">MysticBrew Cafe</h1>
+            <p class="hero-subtitle">Where Every Sip Feels Like Stardust</p>
+            <a href="#menu"><button class="btn-cosmic">Explore Our Universe</button></a>
+        </div>
+    </section>
+
+    <section id="about" class="reveal">
+        <div class="about-container">
+            <div class="about-left">
+                <div class="portal-wrapper">
+                    <div class="portal-ring ring-1"></div>
+                    <div class="portal-ring ring-2"></div>
+                    <div class="portal-ring ring-3"></div>
+                    <div class="portal-core"></div>
+                </div>
+            </div>
+            <div class="about-right">
+                <span class="section-label">Our Celestial Genesis</span>
+                <h2 class="about-title">A Little Piece of Cosmos in Every Cup</h2>
+                <p class="about-text">
+                    Born in the cosmic heart of Mumbai, MysticBrew is where ancient brewing rituals meet the infinite universe. We trace the patterns of stardust to craft unexpected, transcendent sensory realities.
+                </p>
+                <p class="about-text">
+                    Every batch of single-origin coffee beans is treated like a volatile nebula core, lightly roasted under strict thermal geometry to release hidden stardust profiles. Step inside our atmosphere and connect with the infinite array of existence.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section id="menu" class="reveal">
+        <div class="menu-header">
+            <span class="section-label">Astral Formulations</span>
+            <h2 class="about-title">The Alchemical Catalog</h2>
+            
+            <div class="toggle-container">
+                <div class="toggle-slider" id="menu-slider"></div>
+                <button class="toggle-btn active" id="btn-simple">Simple View</button>
+                <button class="toggle-btn" id="btn-cosmic">Cosmic View</button>
+            </div>
+        </div>
+
+        <div class="menu-view-wrapper">
+            
+            <div class="menu-grid" id="menu-simple-view">
+                <div class="category-group">
+                    <div class="category-title-container"><h3 class="category-title">Hot Brews</h3></div>
+                    <div class="simple-card">
+                        <div class="item-meta"><span class="item-name">Nebula Espresso</span><span class="item-price">₹180</span></div>
+                        <p class="item-desc">A compressed singularity of rich, deep structural bean oil layer essence.</p>
+                    </div>
+                    <div class="simple-card">
+                        <div class="item-meta"><span class="item-name">Black Hole Americano</span><span class="item-price">₹160</span></div>
+                        <p class="item-desc">Deep extraction over local thermal spring waters for an infinite density clean finish.</p>
+                    </div>
+                    <div class="simple-card">
+                        <div class="item-meta"><span class="item-name">Galaxy Latte</span><span class="item-price">₹220</span></div>
+                        <p class="item-desc">Silky milk texture arrays swirling over standard house profile extraction cores.</p>
+                    </div>
+                </div>
+                <div class="category-group">
+                    <div class="category-title-container"><h3 class="category-title">Cold Cosmos</h3></div>
+                    <div class="simple-card">
+                        <div class="item-meta"><span class="item-name">Comet Cold Brew</span><span class="item-price">₹200</span></div>
+                        <p class="item-desc">16-hour extreme sub-zero steeping structure producing crystal clean flavor lines.</p>
+                    </div>
+                    <div class="simple-card">
+                        <div class="item-meta"><span class="item-name">Aurora Frappe</span><span class="item-price">₹250</span></div>
+                        <p class="item-desc">Blended iced structural masterpiece finished with custom botanical whipped cloud foams.</p>
+                    </div>
+                    <div class="simple-card">
+                        <div class="item-meta"><span class="item-name">Asteroid Mocha</span><span class="item-price">₹230</span></div>
+                        <p class="item-desc">Dark structural processing cocoa nodes integrated into double shot extractions.</p>
+                    </div>
+                </div>
+                <div class="category-group">
+                    <div class="category-title-container"><h3 class="category-title">Mystic Bites</h3></div>
+                    <div class="simple-card">
+                        <div class="item-meta"><span class="item-name">Stardust Pancakes</span><span class="item-price">₹280</span></div>
+                        <p class="item-desc">Fluffy whipped structure layers glazed with active golden cosmic honey syrup lines.</p>
+                    </div>
+                    <div class="simple-card">
+                        <div class="item-meta"><span class="item-name">Cosmic Toast</span><span class="item-price">₹160</span></div>
+                        <p class="item-desc">Artisan sourdough slice bases containing smashed organic avocado constellation patterns.</p>
+                    </div>
+                    <div class="simple-card">
+                        <div class="item-meta"><span class="item-name">Meteor Waffle</span><span class="item-price">₹320</span></div>
+                        <p class="item-desc">Crisp grid core patterns topped with premium deep space berry coulis infusions.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="menu-grid hidden-view cosmic-mode" id="menu-cosmic-view">
+                <div class="category-group">
+                    <div class="category-title-container"><h3 class="category-title">Hot Brews</h3></div>
+                    <div class="cosmic-card">
+                        <div class="item-meta"><span class="item-name">Nebula Espresso</span><span class="item-price">₹180</span></div>
+                        <p class="item-desc">A compressed singularity of rich, deep structural bean oil layer essence.</p>
+                    </div>
+                    <div class="cosmic-card">
+                        <div class="item-meta"><span class="item-name">Black Hole Americano</span><span class="item-price">₹160</span></div>
+                        <p class="item-desc">Deep extraction over local thermal spring waters for an infinite density clean finish.</p>
+                    </div>
+                    <div class="cosmic-card">
+                        <div class="item-meta"><span class="item-name">Galaxy Latte</span><span class="item-price">₹220</span></div>
+                        <p class="item-desc">Silky milk texture arrays swirling over standard house profile extraction cores.</p>
+                    </div>
+                </div>
+                <div class="category-group">
+                    <div class="category-title-container"><h3 class="category-title">Cold Cosmos</h3></div>
+                    <div class="cosmic-card">
+                        <div class="item-meta"><span class="item-name">Comet Cold Brew</span><span class="item-price">₹200</span></div>
+                        <p class="item-desc">16-hour extreme sub-zero steeping structure producing crystal clean flavor lines.</p>
+                    </div>
+                    <div class="cosmic-card">
+                        <div class="item-meta"><span class="item-name">Aurora Frappe</span><span class="item-price">₹250</span></div>
+                        <p class="item-desc">Blended iced structural masterpiece finished with custom botanical whipped cloud foams.</p>
+                    </div>
+                    <div class="cosmic-card">
+                        <div class="item-meta"><span class="item-name">Asteroid Mocha</span><span class="item-price">₹230</span></div>
+                        <p class="item-desc">Dark structural processing cocoa nodes integrated into double shot extractions.</p>
+                    </div>
+                </div>
+                <div class="category-group">
+                    <div class="category-title-container"><h3 class="category-title">Mystic Bites</h3></div>
+                    <div class="cosmic-card">
+                        <div class="item-meta"><span class="item-name">Stardust Pancakes</span><span class="item-price">₹280</span></div>
+                        <p class="item-desc">Fluffy whipped structure layers glazed with active golden cosmic honey syrup lines.</p>
+                    </div>
+                    <div class="cosmic-card">
+                        <div class="item-meta"><span class="item-name">Cosmic Toast</span><span class="item-price">₹160</span></div>
+                        <p class="item-desc">Artisan sourdough slice bases containing smashed organic avocado constellation patterns.</p>
+                    </div>
+                    <div class="cosmic-card">
+                        <div class="item-meta"><span class="item-name">Meteor Waffle</span><span class="item-price">₹320</span></div>
+                        <p class="item-desc">Crisp grid core patterns topped with premium deep space berry coulis infusions.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section id="services">
+        <div class="services-header reveal">
+            <span class="section-label">Spatial Infrastructure</span>
+            <h2 class="about-title">Interstellar Systems</h2>
+        </div>
+        <div class="services-grid">
+            <div class="service-card reveal">
+                <svg class="service-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/></svg>
+                <h3 class="service-title">Dine In</h3>
+                <p class="service-desc">Atmospheric pressure matrices calibrated for full organic body grounding comforts.</p>
+            </div>
+            <div class="service-card reveal">
+                <svg class="service-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <h3 class="service-title">Takeaway</h3>
+                <p class="service-desc">Hyper speed containment vessels optimized for maintaining molecule alignments on travel paths.</p>
+            </div>
+            <div class="service-card reveal">
+                <svg class="service-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <h3 class="service-title">Private Events</h3>
+                <p class="service-desc">Isolate sector coordinate groups from external dimensions for personalized timeline parties.</p>
+            </div>
+            <div class="service-card reveal">
+                <svg class="service-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                <h3 class="service-title">Live Music</h3>
+                <p class="service-desc">Sonic frequency variations transmitted across tracking array stages inside lounge centers.</p>
+            </div>
+            <div class="service-card reveal">
+                <svg class="service-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                <h3 class="service-title">Astrology Nights</h3>
+                <p class="service-desc">Live natal chart readings coupled with specialized planetary transit alignment potion drinks.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="location" class="reveal">
+        <div class="location-container">
+            <div class="location-card">
+                <div>
+                    <span class="section-label">Coordinates Mapping</span>
+                    <h2 class="location-title">Visit the Outpost</h2>
+                </div>
+                
+                <div class="info-item">
+                    <svg class="info-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <div>
+                        <div class="info-label">Sector Coordinates</div>
+                        <div class="info-value">Carter Road Promenade, Bandra West, Mumbai, Maharashtra 400050</div>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <svg class="info-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <div>
+                        <div class="info-label">Timeline Visibility</div>
+                        <div class="info-value">Monday – Sunday<br>08:00 Standard Hours – 23:00 Standard Hours</div>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <svg class="info-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    <div>
+                        <div class="info-label">Sub-Frequency Lines</div>
+                        <div class="info-value">+91 60050 54475<br>operations@mysticbrew.cosmos</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="map-frame-wrapper">
+                <iframe src="https://maps.google.com/maps?q=19.0596,72.8295&z=15&output=embed" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+        </div>
+    </section>
+
+    <section id="order" class="reveal">
+        <div class="order-content">
+            <span class="section-label">Instant Matter Transmission</span>
+            <h2 class="order-title">Skip the Queue, Order from the Stars</h2>
+            <p class="order-subtext">
+                Tap below to route your elixir selections directly to our kitchen staff matrix over emergency communication bands. Your deployment packages will be localized fresh upon arrival.
+            </p>
+            <a href="https://wa.me/916005054475?text=Hi%20MysticBrew!%20I'd%20like%20to%20place%20an%20order." target="_blank" class="btn-whatsapp">
+                <svg width="20" height="20" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.256 5.26 0 11.748 0c3.141.001 6.098 1.223 8.324 3.448 2.227 2.226 3.446 5.185 3.444 8.327-.004 6.485-5.261 11.74-11.748 11.74-2.004-.001-3.973-.51-5.716-1.478L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.742.002-2.596-1.008-5.036-2.846-6.876C16.65 2.146 14.21 1.137 11.743 1.137c-5.441 0-9.863 4.372-9.867 9.744-.001 1.73.473 3.41 1.37 4.885l-.992 3.621 3.714-.963zm13.721-5.03c-.3-.149-1.772-.865-2.046-.964-.274-.099-.474-.149-.673.149-.198.299-.773.964-.948 1.162-.175.198-.35.223-.65.074-1.033-.518-1.834-.951-2.557-2.174-.192-.326.192-.303.549-1.007.059-.119.03-.223-.015-.322-.045-.099-.474-1.127-.649-1.547-.17-.41-.357-.355-.49-.361-.127-.006-.273-.007-.42-.007-.147 0-.385.054-.586.273-.201.218-.767.742-.767 1.808 0 1.066.786 2.097.896 2.246.11.149 1.547 2.33 3.746 3.264.524.222.932.355 1.25.454.526.165 1.004.141 1.381.087.42-.061 1.772-.716 2.022-1.408.249-.693.249-1.289.174-1.408-.075-.119-.274-.198-.574-.347z"/></svg>
+                <span>Transmit Order over WhatsApp</span>
+            </a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-logo">MysticBrew Cafe</div>
+            <div class="footer-tagline">Where Every Sip Feels Like Stardust</div>
+            <div class="footer-socials">
+                <a href="#" class="social-link" aria-label="Instagram">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                </a>
+                <a href="#" class="social-link" aria-label="Twitter">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+                </a>
+                <a href="#" class="social-link" aria-label="Facebook">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                </a>
+            </div>
+            <div class="footer-muted">Crafted with ✨ in Mumbai • © 2026 MysticBrew Inc.</div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            /* === A. INTERACTIVE MOUSE PARTICLE ENGINE === */
+            const cursorCanvas = document.getElementById('cursorCanvas');
+            const ctx = cursorCanvas.getContext('2d');
+            
+            let mouse = { x: -100, y: -100, active: false };
+            let particles = [];
+            
+            function resizeCursorCanvas() {
+                cursorCanvas.width = window.innerWidth;
+                cursorCanvas.height = window.innerHeight;
+            }
+            resizeCursorCanvas();
+            window.addEventListener('resize', resizeCursorCanvas);
+
+            // Track mouse telemetry data positions
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+                mouse.active = true;
+                
+                // Spawn trailing particle arrays sequentially on moves
+                if (Math.random() < 0.6) {
+                    generateBurst(mouse.x, mouse.y);
+                }
+            });
+
+            window.addEventListener('mouseleave', () => { mouse.active = false; });
+
+            class Particle {
+                constructor(x, y) {
+                    this.x = x;
+                    this.y = y;
+                    // Delicate drifting speed values variables
+                    this.vx = (Math.random() - 0.5) * 1.5;
+                    this.vy = (Math.random() - 0.5) * 1.5 - 0.5; // Slight upward buoyancy
+                    this.alpha = 1.0;
+                    this.size = Math.random() * 2.5 + 1;
+                    
+                    // Distinct bluish color hue allocations
+                    const hues = ['#60a5fa', '#818cf8', '#a78bfa', '#38bdf8'];
+                    this.color = hues[Math.floor(Math.random() * hues.length)];
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.alpha -= 0.025; // Clean fade matching the 600ms lifespan rule
+                }
+
+                draw() {
+                    ctx.save();
+                    ctx.globalAlpha = this.alpha;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = this.color;
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+
+            function generateBurst(mx, my) {
+                const particleCount = Math.floor(Math.random() * 5) + 8; // 8 to 12 particles per burst configuration
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle(mx, my));
+                }
+            }
+
+            /* === B. HERO BACKGROUND TWINKLE STARFIELD ENGINE === */
+            const heroCanvas = document.getElementById('hero-starfield');
+            const hCtx = heroCanvas.getContext('2d');
+            let stars = [];
+
+            function resizeHeroCanvas() {
+                const parent = heroCanvas.parentElement;
+                heroCanvas.width = parent.offsetWidth;
+                heroCanvas.height = parent.offsetHeight;
+            }
+            resizeHeroCanvas();
+            window.addEventListener('resize', resizeHeroCanvas);
+
+            // Construct static tracking arrays configuration data sets
+            for (let i = 0; i < 140; i++) {
+                stars.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    radius: Math.random() * 1.2 + 0.3,
+                    twinkleSpeed: 0.01 + Math.random() * 0.03,
+                    phase: Math.random() * Math.PI
+                });
+            }
+
+            /* === C. MAIN LOOP ENGINE (Coordinates Particle & Twinkle Render Frames) === */
+            function renderFrame() {
+                // Clear Interactive System Layers
+                ctx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
+                hCtx.clearRect(0, 0, heroCanvas.width, heroCanvas.height);
+
+                // 1. Render Background Twinkle Stars
+                hCtx.fillStyle = 'rgba(255,255,255,0.9)';
+                stars.forEach(star => {
+                    star.phase += star.twinkleSpeed;
+                    const alpha = 0.3 + (Math.sin(star.phase) + 1) * 0.35;
+                    hCtx.save();
+                    hCtx.globalAlpha = alpha;
+                    hCtx.beginPath();
+                    hCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    hCtx.fill();
+                    hCtx.restore();
+                });
+
+                // 2. Render Custom Glowing Primary Cursor Dot Indicator
+                if (mouse.active && window.matchMedia('(pointer: fine)').matches) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(mouse.x, mouse.y, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#6366f1';
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // 3. Process Custom Trailing Interactive Sparkle Arrays
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.update();
+                    if (p.alpha <= 0) {
+                        particles.splice(i, 1);
+                    } else {
+                        p.draw();
+                    }
+                }
+
+                requestAnimationFrame(renderFrame);
+            }
+            requestAnimationFrame(renderFrame);
+
+            /* === D. PARALLAX EFFECT MECHANICS ON SCROLL === */
+            window.addEventListener('scroll', () => {
+                const scrolledAmount = window.scrollY;
+                
+                // Slow scroll translation engine mapping for backdrop sky layers
+                heroCanvas.style.transform = `translateY(${scrolledAmount * 0.3}px)`;
+                
+                // Compact Navbar structural tracking modifications
+                const navbarNode = document.querySelector('.navbar');
+                if (scrolledAmount > 60) {
+                    navbarNode.classList.add('scrolled');
+                } else {
+                    navbarNode.classList.remove('scrolled');
+                }
+            });
+
+            /* === E. INTERSECTION OBSERVER SCROLL REVEAL OPERATIONS === */
+            const elementsToReveal = document.querySelectorAll('.reveal');
+            
+            const revealObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        
+                        // Handle potential structural staggered child element configurations elegantly inside segments
+                        const childrenToStagger = entry.target.querySelectorAll('.service-card');
+                        if (childrenToStagger.length > 0) {
+                            childrenToStagger.forEach((child, index) => {
+                                child.style.transitionDelay = `${index * 150}ms`;
+                                child.classList.add('active');
+                            });
+                        }
+                        
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.12,
+                rootMargin: '0px 0px -40px 0px'
+            });
+
+            elementsToReveal.forEach(el => revealObserver.observe(el));
+
+            /* === F. INTERACTIVE MENU TOGGLE SYSTEM === */
+            const btnSimple = document.getElementById('btn-simple');
+            const btnCosmic = document.getElementById('btn-cosmic');
+            const slider = document.getElementById('menu-slider');
+            const simpleViewGrid = document.getElementById('menu-simple-view');
+            const cosmicViewGrid = document.getElementById('menu-cosmic-view');
+
+            btnSimple.addEventListener('click', () => {
+                btnCosmic.classList.remove('active');
+                btnSimple.classList.add('active');
+                slider.style.transform = 'translateX(0px)';
+                
+                // Animate structural grid visibility states smoothly
+                cosmicViewGrid.classList.add('hidden-view');
+                simpleViewGrid.classList.remove('hidden-view');
+            });
+
+            btnCosmic.addEventListener('click', () => {
+                btnSimple.classList.remove('active');
+                btnCosmic.classList.add('active');
+                
+                // Adapt slider horizontal layout tracking measurements seamlessly
+                const targetOffset = btnSimple.offsetWidth;
+                slider.style.transform = `translateX(${targetOffset}px)`;
+                
+                simpleViewGrid.classList.add('hidden-view');
+                cosmicViewGrid.classList.remove('hidden-view');
+            });
+
+            /* === G. MOBILE INTERACTIVE NAVIGATION CONTROLS === */
+            const hamburgerBtn = document.querySelector('.hamburger');
+            const mobileDrawer = document.querySelector('.mobile-menu-drawer');
+            const mobileLinks = document.querySelectorAll('.mobile-menu-drawer a');
+
+            function toggleMobileMenu() {
+                hamburgerBtn.classList.toggle('open');
+                mobileDrawer.classList.toggle('open');
+            }
+
+            hamburgerBtn.addEventListener('click', toggleMobileMenu);
+            mobileLinks.forEach(link => link.addEventListener('click', toggleMobileMenu));
+        });
+    </script>
+</body>
+</html>

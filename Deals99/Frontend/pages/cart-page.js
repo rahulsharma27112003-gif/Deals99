@@ -55,7 +55,7 @@ function loadCartItems() {
       const img =
         item.img ||
         item.product?.primary_image ||
-        'https://via.placeholder.com/100x100?text=Item';
+        'favicon.svg';
       const name = item.name || item.product?.name || 'Product';
       const desc = item.desc || item.product?.description || '';
       const category = item.category || item.product?.category_name || 'General';
@@ -108,18 +108,36 @@ async function updateOrderSummary() {
     }
   }
 
-  const shipping = subtotal > 500 ? 0 : 50;
+  const shipping = subtotal > 499 ? 0 : 99;
+  const promoCode = localStorage.getItem('appliedPromoCode') || '';
+  let discount = 0;
+  if (promoCode === 'DEALS10' || promoCode === 'WELCOME10') {
+    discount = subtotal * 0.10;
+  } else if (promoCode === 'SAVE20') {
+    discount = subtotal * 0.20;
+  } else if (promoCode === 'FREESHIP') {
+    discount = shipping;
+  }
+
   const tax = subtotal * 0.18;
-  const total = subtotal + shipping + tax;
+  const total = subtotal + shipping + tax - discount;
+  const shippingDisplay = shipping === 0 ? 'FREE' : formatMoney(shipping);
+  const discountDisplay = discount > 0 ? `-${formatMoney(discount)}` : formatMoney(0);
 
   const set = (id, val) => {
     const el = document.getElementById(id);
-    if (el) el.textContent = formatMoney(val);
+    if (el) el.textContent = val;
   };
-  set('subtotal', subtotal);
-  set('shipping', shipping);
-  set('tax', tax);
-  set('total', total);
+  set('subtotal', formatMoney(subtotal));
+  set('shipping', shippingDisplay);
+  set('tax', formatMoney(tax));
+  set('discount', discountDisplay);
+  set('total', formatMoney(total));
+
+  const couponMessage = document.getElementById('couponMessage');
+  if (couponMessage) {
+    couponMessage.innerHTML = promoCode ? `<div class="alert alert-info">Coupon applied: ${promoCode}</div>` : '';
+  }
 
   const checkoutBtn = document.getElementById('checkoutBtn');
   if (checkoutBtn) {
@@ -147,7 +165,7 @@ async function loadRecommendedProducts() {
         name: p.name,
         price: parseFloat(p.price),
         mrp: parseFloat(p.mrp) || parseFloat(p.price),
-        img: p.primary_image || 'https://via.placeholder.com/100',
+        img: p.primary_image || 'favicon.svg',
         category: p.category_name || 'General',
       };
     });
@@ -217,27 +235,50 @@ function bindCartEvents() {
     }
   });
 
+  const checkoutBtn = document.getElementById('checkoutBtn');
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', (e) => {
+      if (getItems().length === 0) {
+        e.preventDefault();
+        checkoutBtn.classList.add('disabled');
+        checkoutBtn.setAttribute('aria-disabled', 'true');
+      }
+    });
+  }
+
   document.addEventListener('cart:updated', async () => {
+    console.debug('cart-page: received cart:updated event, items=', window.cartManager?.items || window.StorageManager?.get('cart'));
     loadCartItems();
     await updateOrderSummary();
   });
 }
 
-window.applyCoupon = function applyCoupon() {
-  const couponCode = document.getElementById('couponCode')?.value.trim();
+window.applyCoupon = async function applyCoupon() {
+  const couponCode = document.getElementById('couponCode')?.value.trim().toUpperCase();
   const messageDiv = document.getElementById('couponMessage');
   if (!messageDiv) return;
   if (!couponCode) {
     messageDiv.innerHTML = '<div class="alert alert-warning">Please enter a coupon code</div>';
     return;
   }
-  const validCoupons = { WELCOME10: 10, SAVE20: 20, FREESHIP: 0 };
-  if (validCoupons[couponCode]) {
-    const discount = validCoupons[couponCode];
-    messageDiv.innerHTML = `<div class="alert alert-success">Coupon applied! ${discount > 0 ? discount + '% discount' : 'Free shipping'}</div>`;
-  } else {
-    messageDiv.innerHTML = '<div class="alert alert-danger">Invalid coupon code</div>';
+  const validCoupons = {
+    DEALS10: { type: 'percent', value: 10, label: '10% discount' },
+    WELCOME10: { type: 'percent', value: 10, label: '10% discount' },
+    SAVE20: { type: 'percent', value: 20, label: '20% discount' },
+    FREESHIP: { type: 'shipping', value: 99, label: 'Free shipping' }
+  };
+
+  const coupon = validCoupons[couponCode];
+  if (coupon) {
+    localStorage.setItem('appliedPromoCode', couponCode);
+    messageDiv.innerHTML = `<div class="alert alert-success">Coupon applied! ${coupon.label}</div>`;
+    await updateOrderSummary();
+    return;
   }
+
+  localStorage.removeItem('appliedPromoCode');
+  messageDiv.innerHTML = '<div class="alert alert-danger">Invalid coupon code</div>';
+  await updateOrderSummary();
 };
 
 async function init() {

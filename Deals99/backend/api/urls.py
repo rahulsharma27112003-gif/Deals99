@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     AuthView, RegisterView, VerifyEmailView, RequestPasswordResetView, PasswordResetConfirmView,
-    TokenRefreshFromCookieView, GetCSRFTokenView, LogoutView,
+    TokenRefreshFromCookieView, GetCSRFTokenView, LogoutView, AuthMeView,
     CategoryViewSet, SubcategoryViewSet,
     ProductViewSet, CartViewSet, WishlistViewSet, OrderViewSet,
     ReviewViewSet, BannerViewSet, UserProfileViewSet,     DashboardView,
@@ -27,6 +27,7 @@ router.register(r'profile', UserProfileViewSet, basename='profile')
 urlpatterns = [
     path('auth/login/', AuthView.as_view(), name='login'),
     path('auth/register/', RegisterView.as_view(), name='register'),
+    path('auth/me/', AuthMeView.as_view(), name='auth_me'),
     path('auth/verify-email/', VerifyEmailView.as_view(), name='verify_email'),
     path('auth/password-reset/request/', RequestPasswordResetView.as_view(), name='password_reset_request'),
     path('auth/password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),

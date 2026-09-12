@@ -304,6 +304,64 @@ class OrderManager {
     });
     document.getElementById('filterBtn')?.addEventListener('click', () => this.showToast('Filter options coming soon', 'info'));
     document.getElementById('sortBtn')?.addEventListener('click', () => this.showToast('Sort options coming soon', 'info'));
+    document.getElementById('trackOrderBtn')?.addEventListener('click', () => this.handleQuickAction('track'));
+    document.getElementById('downloadInvoiceBtn')?.addEventListener('click', () => this.handleQuickAction('invoice'));
+    document.getElementById('returnOrderBtn')?.addEventListener('click', () => this.handleQuickAction('return'));
+    document.getElementById('contactSupportBtn')?.addEventListener('click', () => this.handleQuickAction('support'));
+  }
+
+  handleQuickAction(action) {
+    const order = this.selectedOrder || this.orders[0];
+    if (!order) {
+      this.showToast('Select an order first to use quick actions.', 'info');
+      return;
+    }
+
+    if (action === 'track') {
+      return this.trackOrder(order.id);
+    }
+
+    if (action === 'invoice') {
+      return this.downloadInvoice(order);
+    }
+
+    if (action === 'return') {
+      return this.showToast('Return request received. Our support team will contact you shortly.', 'success');
+    }
+
+    if (action === 'support') {
+      return this.showToast('Contact support at support@deals99.com or call 1800-123-456.', 'info');
+    }
+  }
+
+  downloadInvoice(order) {
+    const lines = [
+      'Deals99 Invoice',
+      `Order #: ${order.order_number || order.id}`,
+      `Date: ${new Date(order.orderDate).toLocaleString()}`,
+      `Status: ${order.status}`,
+      `Payment: ${(order.payment_status || 'pending').toUpperCase()}`,
+      `Total: ₹${Number(order.total_amount || order.total || 0).toFixed(2)}`,
+      '',
+      'Shipping Address:',
+      order.shipping_address || 'Not available',
+      '',
+      'Items:',
+      ...((order.items || []).map((item) =>
+        ` - ${item.name} x${item.qty || 1} @ ₹${Number(item.price || 0).toFixed(2)} = ₹${Number((item.price || 0) * (item.qty || 1)).toFixed(2)}`
+      )),
+      '',
+      'Thank you for shopping with Deals99!'
+    ];
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `deals99-order-${order.order_number || order.id}.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    this.showToast('Invoice downloaded successfully.', 'success');
   }
 
   showToast(message, type = 'info') {

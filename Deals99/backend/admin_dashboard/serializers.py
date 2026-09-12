@@ -30,7 +30,10 @@ class AdminUserSerializer(serializers.ModelSerializer):
         ]
 
     def get_role(self, obj):
-        return getattr(obj, 'role', getattr(getattr(obj, 'profile', None), 'role', None))
+        role = getattr(obj, 'role', getattr(getattr(obj, 'profile', None), 'role', None))
+        if role is None:
+            return 'CUSTOMER'
+        return str(role).replace('-', '_').replace(' ', '_').upper()
 
 
 class AdminProductSummarySerializer(serializers.ModelSerializer):

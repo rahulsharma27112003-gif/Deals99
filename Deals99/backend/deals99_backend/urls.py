@@ -25,7 +25,7 @@ if settings.DEBUG:
     urlpatterns += [
         # Serve raw HTML pages (so /products.html, /cart.html etc. work in dev)
         re_path(r'^(?P<path>.*\.html)$', serve, {'document_root': settings.BASE_DIR.parent.parent / 'Frontend'}),
-        re_path(r'^(?P<path>.*\.(?:css|js|png|jpg|jpeg|svg|webp))$', serve,
+        re_path(r'^(?P<path>.*\.(?:css|js|png|jpg|jpeg|svg|webp|webmanifest|json|ico))$', serve,
                 {'document_root': settings.BASE_DIR.parent.parent / 'Frontend'}),
     ]
 

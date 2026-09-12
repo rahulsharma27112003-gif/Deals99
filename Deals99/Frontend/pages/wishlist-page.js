@@ -48,7 +48,7 @@ function loadWishlistItems() {
       const key = lineKey(item);
       const price = parseFloat(item.price || item.discounted || item.mrp || 0);
       const mrp = parseFloat(item.mrp || 0);
-      const img = item.img || item.product?.primary_image || 'https://via.placeholder.com/100x100';
+      const img = item.img || item.product?.primary_image || 'favicon.svg';
       const inStock = typeof item.stock === 'number' ? item.stock > 0 : true;
       const productId = item.product_id || item.product?.id || '';
 

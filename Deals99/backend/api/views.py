@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework.throttling import ScopedRateThrottle
 from django.db import IntegrityError
+from django.core.cache import cache
 
 User = get_user_model()
 from django.db.models import Q, Avg, Count, F
@@ -341,6 +342,15 @@ class LogoutView(APIView):
         return response
 
 
+class AuthMeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Return the authenticated user in the canonical API contract."""
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -350,6 +360,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), IsStaffOrAbove()]
+        return [AllowAny()]
 
     @action(detail=True, methods=['get'])
     def subcategories(self, request, pk=None):
@@ -370,6 +385,11 @@ class SubcategoryViewSet(viewsets.ModelViewSet):
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
 
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), IsStaffOrAbove()]
+        return [AllowAny()]
+
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.select_related('category', 'subcategory').prefetch_related('images', 'reviews')
@@ -380,10 +400,33 @@ class ProductViewSet(viewsets.ModelViewSet):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAuthenticated(), IsStaffOrAbove()]
         return [AllowAny()]
+
     filterset_fields = ['category', 'subcategory', 'active', 'featured']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'price', 'created_at']
     ordering = ['-created_at']
+
+    def _invalidate_product_cache(self):
+        try:
+            cache.delete_pattern('products:list:*')
+        except Exception:
+            cache.clear()
+        cache.delete('admin:overview:stats')
+        cache.delete('admin:revenue:buckets')
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        self._invalidate_product_cache()
+        return instance
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        self._invalidate_product_cache()
+        return instance
+
+    def perform_destroy(self, instance):
+        instance.delete()
+        self._invalidate_product_cache()
 
     def list(self, request, *args, **kwargs):
         # Cache product listing responses (querystring-aware) for short TTL
@@ -604,15 +647,19 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class BannerViewSet(viewsets.ModelViewSet):
-    queryset = Banner.objects.filter(active=True)
+    queryset = Banner.objects.all()
     serializer_class = BannerSerializer
-    permission_classes = [AllowAny]
     ordering = ['order', '-created_at']
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'destroy']:
-            return [IsAdminUser()]
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), IsStaffOrAbove()]
         return [AllowAny()]
+
+    def get_queryset(self):
+        if self.request.user.is_authenticated and self.request.user.is_staff:
+            return Banner.objects.all()
+        return Banner.objects.filter(active=True)
 
 
 class UserProfileViewSet(viewsets.ModelViewSet):

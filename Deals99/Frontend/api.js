@@ -1,14 +1,34 @@
 /**
  * Deals99 API client — environment-aware base URL, JWT auth, pagination helpers.
  */
+function getQueryParam(name) {
+  if (typeof window === 'undefined' || !window.location?.search) return null;
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
+
 function getApiBase() {
+  const explicitBase = getQueryParam('api_base');
+  if (explicitBase) {
+    return String(explicitBase).replace(/\/$/, '');
+  }
+
   if (typeof window !== 'undefined' && window.__DEALS99_API_BASE__) {
     return String(window.__DEALS99_API_BASE__).replace(/\/$/, '');
   }
+
   if (typeof window !== 'undefined' && window.location?.origin && !window.location.origin.startsWith('file:')) {
-    return `${window.location.origin}/api`;
+    const { hostname, origin } = window.location;
+    const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1';
+
+    if (isLocalDev) {
+      return 'http://127.0.0.1:8000/api';
+    }
+
+    return `${origin}/api`;
   }
-  return 'http://localhost:8000/api';
+
+  return 'http://127.0.0.1:8000/api';
 }
 
 const API_BASE = getApiBase();
@@ -61,7 +81,28 @@ class TokenManager {
 }
 
 // --- API Request Helper ---
-async function apiRequest(endpoint, options = {}) {
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableMethod(method) {
+  const normalized = (method || 'GET').toUpperCase();
+  return ['GET', 'HEAD', 'OPTIONS'].includes(normalized);
+}
+
+function parseRetryAfterMs(response) {
+  const header = response.headers.get('Retry-After');
+  if (!header) return null;
+  const seconds = Number(header);
+  if (!Number.isNaN(seconds)) return seconds * 1000;
+  const date = Date.parse(header);
+  if (!Number.isNaN(date)) {
+    return Math.max(0, date - Date.now());
+  }
+  return null;
+}
+
+async function apiRequestWithRetry(endpoint, options = {}, attemptsLeft = 3, baseDelay = 500) {
   const url = `${API_CONFIG.baseURL}${endpoint}`;
   const config = {
     credentials: options.credentials ?? 'include',
@@ -86,13 +127,24 @@ async function apiRequest(endpoint, options = {}) {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('isAdminLoggedIn');
         if (typeof window !== 'undefined' && !window.location.pathname.includes('login')) {
-          window.location.href = '/login.html';
+          const nextPage = window.location.pathname.split('/').pop() || 'index.html';
+          window.location.href = `login.html?next=${encodeURIComponent(nextPage)}`;
         }
         throw new Error('Authentication failed');
       }
     }
 
+    if (response.status === 429 && attemptsLeft > 0 && isRetryableMethod(config.method)) {
+      const retryAfterMs = parseRetryAfterMs(response) ?? baseDelay * Math.pow(2, 3 - attemptsLeft);
+      console.warn(`Request throttled (${endpoint}). Retrying in ${retryAfterMs}ms (${attemptsLeft - 1} attempts remaining).`);
+      await sleep(retryAfterMs);
+      return apiRequestWithRetry(endpoint, options, attemptsLeft - 1, baseDelay);
+    }
+
     if (!response.ok) {
+      if (response.status === 404 && isRetryableMethod(config.method)) {
+        return null;
+      }
       const errorData = await response.json().catch(() => ({}));
       const msg =
         errorData.error ||
@@ -106,9 +158,19 @@ async function apiRequest(endpoint, options = {}) {
     if (response.status === 204) return null;
     return await response.json();
   } catch (error) {
+    if (error instanceof TypeError) {
+      if (isRetryableMethod(config.method)) {
+        return null;
+      }
+      throw new Error(`Unable to reach backend at ${url}. Is the Deals99 backend server running on ${API_CONFIG.baseURL}?`);
+    }
     console.error('API Request failed:', endpoint, error);
     throw error;
   }
+}
+
+async function apiRequest(endpoint, options = {}) {
+  return apiRequestWithRetry(endpoint, options);
 }
 
 async function refreshToken() {
@@ -137,6 +199,10 @@ async function refreshToken() {
 }
 
 // --- User Auth ---
+export async function fetchCurrentUser() {
+  return unwrapObject(await apiRequest('/auth/me/'));
+}
+
 export async function loginUser(username, password) {
   const data = await apiRequest('/auth/login/', {
     method: 'POST',
@@ -176,6 +242,7 @@ export function logoutUser() {
   localStorage.removeItem('isLoggedIn');
   localStorage.removeItem('isAdminLoggedIn');
   localStorage.removeItem('user_data');
+  localStorage.removeItem('currentUser');
 }
 
 // --- Products ---
@@ -330,25 +397,25 @@ export async function updateUserProfile(data) {
   );
 }
 
-// --- Admin Dashboard (legacy + v1 paths) ---
+// --- Admin Dashboard (v1 paths) ---
 export async function fetchDashboardStats() {
-  try {
-    return unwrapObject(await apiRequest('/admin/dashboard/'));
-  } catch {
-    return unwrapObject(await apiRequest('/v1/admin/dashboard/'));
-  }
+  return unwrapObject(await apiRequest('/v1/admin/dashboard/'));
 }
 
 export async function fetchAdminRevenue() {
-  return unwrapObject(await apiRequest('/admin/revenue/'));
+  return unwrapObject(await apiRequest('/v1/admin/revenue/'));
 }
 
 export async function fetchAdminTopProducts(limit = 10) {
-  return unwrapObject(await apiRequest(`/admin/top-products/?limit=${limit}`));
+  return unwrapPaginated(await apiRequest(`/v1/admin/top-products/?limit=${limit}`));
 }
 
 export async function fetchAdminLowStock(threshold = 10) {
-  return unwrapObject(await apiRequest(`/admin/low-stock/?threshold=${threshold}`));
+  return unwrapPaginated(await apiRequest(`/v1/admin/low-stock/?threshold=${threshold}`));
+}
+
+export async function fetchAdminRefunds() {
+  return unwrapPaginated(await apiRequest('/v1/admin/refunds/'));
 }
 
 // --- Utility ---
@@ -357,37 +424,49 @@ export function isAuthenticated() {
 }
 
 export function getCurrentUser() {
-  const userData = localStorage.getItem('user_data');
+  const userData = localStorage.getItem('user_data') || localStorage.getItem('currentUser');
   return userData ? JSON.parse(userData) : null;
 }
 
 export function setCurrentUser(userData) {
   if (userData) {
-    localStorage.setItem('user_data', JSON.stringify(userData));
+    const json = JSON.stringify(userData);
+    localStorage.setItem('user_data', json);
+    localStorage.setItem('currentUser', json);
   } else {
     localStorage.removeItem('user_data');
+    localStorage.removeItem('currentUser');
   }
 }
 
-// --- Admin user management (admin_dashboard API) ---
-export async function fetchUsers() {
-  return unwrapPaginated(await apiRequest('/admin/users/'));
+// --- Admin User Management (v1/admin API) ---
+export async function fetchAdminUsers(params = {}) {
+  const query = new URLSearchParams(params).toString();
+  return unwrapPaginated(await apiRequest(`/v1/admin/users/${query ? `?${query}` : ''}`));
+}
+
+export async function fetchAdminUserDetail(userId) {
+  return unwrapObject(await apiRequest(`/v1/admin/users/${userId}/`));
 }
 
 export async function updateUser(id, data) {
-  return apiRequest(`/admin/users/${id}/`, {
+  return unwrapObject(await apiRequest(`/v1/admin/users/${id}/`, {
     method: 'PATCH',
     body: JSON.stringify(data),
-  });
+  }));
 }
 
 export async function deleteUser(id) {
-  return apiRequest(`/admin/users/${id}/`, { method: 'DELETE' });
+  return apiRequest(`/v1/admin/users/${id}/`, { method: 'DELETE' });
 }
+
+// Backwards-compatibility alias: older frontend code imports `fetchUsers`
+// Provide it as an alias to `fetchAdminUsers` to avoid import errors.
+export const fetchUsers = fetchAdminUsers;
 
 export async function adminUpdateOrderStatus(orderId, status) {
   return unwrapObject(
-    await apiRequest('/admin/order-status-update/', {
+    await apiRequest('/v1/admin/order-status-update/', {
       method: 'POST',
       body: JSON.stringify({ order_id: orderId, status }),
     })
@@ -396,6 +475,82 @@ export async function adminUpdateOrderStatus(orderId, status) {
 
 export async function deleteOrder(id) {
   return apiRequest(`/orders/${id}/`, { method: 'DELETE' });
+}
+
+// --- Product Management (Admin) ---
+export async function createProduct(productData) {
+  return unwrapObject(await apiRequest('/products/', {
+    method: 'POST',
+    body: JSON.stringify(productData)
+  }));
+}
+
+export async function updateProductAdmin(id, productData) {
+  return unwrapObject(await apiRequest(`/products/${id}/`, {
+    method: 'PATCH',
+    body: JSON.stringify(productData)
+  }));
+}
+
+export async function deleteProductAdmin(id) {
+  return apiRequest(`/products/${id}/`, { method: 'DELETE' });
+}
+
+// --- Category Management (Admin) ---
+export async function createCategory(categoryData) {
+  return unwrapObject(await apiRequest('/categories/', {
+    method: 'POST',
+    body: JSON.stringify(categoryData)
+  }));
+}
+
+export async function updateCategory(id, categoryData) {
+  return unwrapObject(await apiRequest(`/categories/${id}/`, {
+    method: 'PUT',
+    body: JSON.stringify(categoryData)
+  }));
+}
+
+export async function deleteCategory(id) {
+  return apiRequest(`/categories/${id}/`, { method: 'DELETE' });
+}
+
+// --- Subcategory Management (Admin) ---
+export async function createSubcategory(subcategoryData) {
+  return unwrapObject(await apiRequest('/subcategories/', {
+    method: 'POST',
+    body: JSON.stringify(subcategoryData)
+  }));
+}
+
+export async function updateSubcategory(id, subcategoryData) {
+  return unwrapObject(await apiRequest(`/subcategories/${id}/`, {
+    method: 'PUT',
+    body: JSON.stringify(subcategoryData)
+  }));
+}
+
+export async function deleteSubcategory(id) {
+  return apiRequest(`/subcategories/${id}/`, { method: 'DELETE' });
+}
+
+// --- Banner Management (Admin) ---
+export async function createBanner(bannerData) {
+  return unwrapObject(await apiRequest('/banners/', {
+    method: 'POST',
+    body: JSON.stringify(bannerData)
+  }));
+}
+
+export async function updateBanner(id, bannerData) {
+  return unwrapObject(await apiRequest(`/banners/${id}/`, {
+    method: 'PUT',
+    body: JSON.stringify(bannerData)
+  }));
+}
+
+export async function deleteBanner(id) {
+  return apiRequest(`/banners/${id}/`, { method: 'DELETE' });
 }
 
 // --- Payments ---
@@ -421,4 +576,4 @@ export async function verifyPayment(paymentId, paymentMethod = 'stripe') {
   );
 }
 
-export { API_BASE, getApiBase, unwrapPaginated, unwrapObject };
+export { API_BASE, getApiBase };

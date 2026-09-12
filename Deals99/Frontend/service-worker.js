@@ -1,11 +1,11 @@
-const CACHE_VERSION = 'v1::deals99';
+const CACHE_VERSION = 'v4::deals99';
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/global.css',
-  '/script.js',
-  '/api.js',
-  '/manifest.webmanifest'
+  './',
+  './index.html',
+  './global.css',
+  './script.js',
+  './manifest.webmanifest',
+  './favicon.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -28,16 +28,42 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Placeholder images — use local fallback when external service is unavailable
+  if (url.hostname === 'via.placeholder.com') {
+    event.respondWith(
+      caches.match('/favicon.svg').then((cached) => cached || fetch('/favicon.svg')).catch(() => fetch('/favicon.svg'))
+    );
+    return;
+  }
+
   // API requests — network first
   if (url.pathname.startsWith('/api/')) {
+    if (request.method !== 'GET') {
+      event.respondWith(
+        fetch(request).catch(() =>
+          new Response(JSON.stringify({ error: 'Service unavailable' }), {
+            status: 503,
+            statusText: 'Service Unavailable',
+            headers: { 'Content-Type': 'application/json' },
+          })
+        )
+      );
+      return;
+    }
+
     event.respondWith(
       fetch(request)
         .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE_VERSION).then(cache => cache.put(request, clone));
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_VERSION).then(cache => cache.put(request, clone));
+          }
           return res;
         })
-        .catch(() => caches.match(request))
+        .catch(async () => {
+          const cached = await caches.match(request);
+          return cached || new Response('', { status: 503, statusText: 'Service Unavailable' });
+        })
     );
     return;
   }

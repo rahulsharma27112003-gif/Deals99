@@ -9,6 +9,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="global.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
 </head>
 <body class="bg-light">
   <div id="site-header" data-active="login"></div>
@@ -190,152 +191,34 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script type="module" src="script.js"></script>
-  
   <script>
-    // Password toggle functionality
-    document.getElementById('togglePassword').addEventListener('click', function() {
-      const password = document.getElementById('password');
-      const icon = this.querySelector('i');
-      
-      if (password.type === 'password') {
-        password.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-      } else {
-        password.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-      }
-    });
-
-    // Form validation
-    function validateForm(form) {
-      const inputs = form.querySelectorAll('input[required]');
-      let isValid = true;
-      
-      inputs.forEach(input => {
-        if (!input.value.trim()) {
-          input.classList.add('is-invalid');
-          isValid = false;
-        } else {
-          input.classList.remove('is-invalid');
-          input.classList.add('is-valid');
-        }
-      });
-      
-      return isValid;
-    }
-
-    // Login form submission
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      if (!validateForm(this)) {
-        return;
-      }
-      
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const rememberMe = document.getElementById('rememberMe').checked;
-      
-      // Simulate login process
-      const submitBtn = this.querySelector('button[type="submit"]');
-      const originalText = submitBtn.innerHTML;
-      
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Logging in...';
-      submitBtn.disabled = true;
-      
-      setTimeout(() => {
-        // Store user data
-        const user = {
-          name: email.split('@')[0],
-          email: email,
-          loginTime: new Date().toISOString()
-        };
-        
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        localStorage.setItem('isLoggedIn', 'true');
-        
-        if (rememberMe) {
-          localStorage.setItem('rememberMe', 'true');
-        }
-        
-        // Show success message
-        showToast('Login successful! Redirecting...', 'success');
-        
-        setTimeout(() => {
-          window.location.href = 'index.html';
-        }, 1500);
-        
-      }, 2000);
-    });
-
-    // Admin login form submission
-    document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      if (!validateForm(this)) {
-        return;
-      }
-      
-      const username = document.getElementById('adminUsername').value;
-      const password = document.getElementById('adminPassword').value;
-      
-      // Simple admin validation (in real app, this would be server-side)
-      if (username === 'admin' && password === 'admin123') {
-        localStorage.setItem('isAdminLoggedIn', 'true');
-        showToast('Admin login successful!', 'success');
-        
-        setTimeout(() => {
-          window.location.href = 'admin.html';
-        }, 1500);
-      } else {
-        showToast('Invalid admin credentials!', 'error');
-      }
-    });
-
-    // Toast notification function
-    function showToast(message, type = 'info') {
-      const toastContainer = document.createElement('div');
-      toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-      toastContainer.style.zIndex = '9999';
-      
-      const toast = document.createElement('div');
-      toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'primary'} border-0`;
-      toast.setAttribute('role', 'alert');
-      toast.setAttribute('aria-live', 'assertive');
-      toast.setAttribute('aria-atomic', 'true');
-      
-      toast.innerHTML = `
-        <div class="d-flex">
-          <div class="toast-body">
-            ${message}
-          </div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-      `;
-      
-      toastContainer.appendChild(toast);
-      document.body.appendChild(toastContainer);
-      
-      const bsToast = new bootstrap.Toast(toast);
-      bsToast.show();
-      
-      // Remove toast container after toast is hidden
-      toast.addEventListener('hidden.bs.toast', () => {
-        document.body.removeChild(toastContainer);
-      });
-    }
-
-    // Check if user is already logged in
     document.addEventListener('DOMContentLoaded', function() {
-      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-      const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
-      
-      if (isLoggedIn) {
-        window.location.href = 'index.html';
-      } else if (isAdminLoggedIn) {
+      const passwordToggle = document.getElementById('togglePassword');
+      const passwordInput = document.getElementById('password');
+
+      passwordToggle?.addEventListener('click', function () {
+        if (!passwordInput) return;
+        const icon = this.querySelector('i');
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          icon?.classList.remove('fa-eye');
+          icon?.classList.add('fa-eye-slash');
+        } else {
+          passwordInput.type = 'password';
+          icon?.classList.remove('fa-eye-slash');
+          icon?.classList.add('fa-eye');
+        }
+      });
+
+      const accessToken = localStorage.getItem('access_token');
+      const storedUser = localStorage.getItem('currentUser') || localStorage.getItem('user_data');
+      const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+      const isAdminUser = !!(parsedUser && (parsedUser.is_staff || parsedUser.is_superuser || ['super_admin','superadmin','admin','manager','staff'].includes(String(parsedUser.role || parsedUser.user_role || '').toLowerCase().replace(/[-_\s]+/g, '_'))));
+
+      if (accessToken && isAdminUser) {
         window.location.href = 'admin.html';
+      } else if (accessToken && parsedUser) {
+        window.location.href = 'index.html';
       }
     });
   </script>
